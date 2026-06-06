@@ -14,11 +14,19 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	
+	"github.com/redis/go-redis/v9"
+
 	"github.com/nihai-muhtar/backend/internal/application/auth"
+	appRoadscore "github.com/nihai-muhtar/backend/internal/application/roadscore"
+	"github.com/nihai-muhtar/backend/internal/infrastructure/blur"
+	"github.com/nihai-muhtar/backend/internal/infrastructure/cache"
 	"github.com/nihai-muhtar/backend/internal/infrastructure/database"
+	"github.com/nihai-muhtar/backend/internal/infrastructure/directions"
 	"github.com/nihai-muhtar/backend/internal/infrastructure/handler"
+	rlmiddleware "github.com/nihai-muhtar/backend/internal/infrastructure/middleware"
+	"github.com/nihai-muhtar/backend/internal/infrastructure/huggingface"
 	"github.com/nihai-muhtar/backend/internal/infrastructure/repository"
+	"github.com/nihai-muhtar/backend/internal/infrastructure/streetview"
 	"github.com/nihai-muhtar/backend/internal/shared/security"
 )
 
@@ -52,6 +60,7 @@ func main() {
 
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(db)
+	roadScoreRepo := repository.NewRoadScoreRepository(db)
 
 	// Initialize services
 	jwtConfig := security.JWTConfig{
@@ -60,7 +69,37 @@ func main() {
 	}
 	authService := auth.NewService(userRepo, jwtConfig)
 
-	// Initialize handlers
+	// Initialize Redis client
+	rdb := redis.NewClient(&redis.Options{
+		Addr: fmt.Sprintf("%s:%s", config.RedisHost, config.RedisPort),
+	})
+	if err := rdb.Ping(context.Background()).Err(); err != nil {
+		slog.Warn("Redis connection failed — cache disabled", "error", err)
+	} else {
+		slog.Info("Redis connection established")
+	}
+
+	// Initialize RoadScore infrastructure
+	roadScoreCache := cache.NewRoadScoreCache(rdb)
+	directionsClient := directions.NewClient(config.GoogleAPIKey)
+	streetViewClient := streetview.NewClient(config.GoogleAPIKey)
+	hfClient := huggingface.NewClient(config.HuggingFaceAPIKey, config.HuggingFaceModel)
+	blurProcessor := blur.NewProcessor()
+	streetViewRateLimiter := rlmiddleware.NewStreetViewRateLimiter()
+	_ = streetViewRateLimiter // available for use in subrouters
+
+	// Initialize RoadScore use case + handler
+	analyzeUC := appRoadscore.NewAnalyzeRouteUseCase(
+		roadScoreRepo,
+		directionsClient,
+		streetViewClient,
+		hfClient,
+		blurProcessor,
+		roadScoreCache,
+	)
+	roadScoreHandler := handler.NewRoadScoreHandler(analyzeUC, roadScoreRepo)
+
+	// Initialize auth handler
 	authHandler := handler.NewAuthHandler(authService)
 
 	// Initialize router
@@ -112,6 +151,14 @@ func main() {
 		r.Post("/auth/register", authHandler.Register)
 		r.Post("/auth/login", authHandler.Login)
 
+		// RoadScore routes
+		r.Route("/road-score", func(r chi.Router) {
+			r.Post("/analyze", roadScoreHandler.AnalyzeRoute)
+			r.Get("/analysis/{analysisId}", roadScoreHandler.GetAnalysis)
+			r.Get("/routes/{routeId}/segments", roadScoreHandler.GetSegments)
+			r.Get("/analysis/{analysisId}/report", roadScoreHandler.GenerateReport)
+		})
+
 		// Detection routes (placeholders for now)
 		r.Post("/detections", handleCreateDetection)
 		r.Get("/detections", handleListDetections)
@@ -160,30 +207,36 @@ func main() {
 
 // Config holds application configuration
 type Config struct {
-	ServerHost string
-	ServerPort string
-	DBHost     string
-	DBPort     string
-	DBUser     string
-	DBPassword string
-	DBName     string
-	RedisHost  string
-	RedisPort  string
-	JWTSecret  string
+	ServerHost        string
+	ServerPort        string
+	DBHost            string
+	DBPort            string
+	DBUser            string
+	DBPassword        string
+	DBName            string
+	RedisHost         string
+	RedisPort         string
+	JWTSecret         string
+	GoogleAPIKey      string
+	HuggingFaceAPIKey string
+	HuggingFaceModel  string
 }
 
 func loadConfig() *Config {
 	return &Config{
-		ServerHost: getEnv("SERVER_HOST", "0.0.0.0"),
-		ServerPort: getEnv("SERVER_PORT", "8080"),
-		DBHost:     getEnv("DB_HOST", "localhost"),
-		DBPort:     getEnv("DB_PORT", "5432"),
-		DBUser:     getEnv("DB_USER", "muhtar"),
-		DBPassword: getEnv("DB_PASSWORD", "muhtar123"),
-		DBName:     getEnv("DB_NAME", "muhtar_db"),
-		RedisHost:  getEnv("REDIS_HOST", "localhost"),
-		RedisPort:  getEnv("REDIS_PORT", "6379"),
-		JWTSecret:  getEnv("JWT_SECRET", "your-secret-key-change-this-in-production"),
+		ServerHost:        getEnv("SERVER_HOST", "0.0.0.0"),
+		ServerPort:        getEnv("SERVER_PORT", "8080"),
+		DBHost:            getEnv("DB_HOST", "localhost"),
+		DBPort:            getEnv("DB_PORT", "5432"),
+		DBUser:            getEnv("DB_USER", "muhtar"),
+		DBPassword:        getEnv("DB_PASSWORD", "muhtar123"),
+		DBName:            getEnv("DB_NAME", "muhtar_db"),
+		RedisHost:         getEnv("REDIS_HOST", "localhost"),
+		RedisPort:         getEnv("REDIS_PORT", "6379"),
+		JWTSecret:         getEnv("JWT_SECRET", "your-secret-key-change-this-in-production"),
+		GoogleAPIKey:      getEnv("GOOGLE_API_KEY", ""),
+		HuggingFaceAPIKey: getEnv("HUGGINGFACE_API_KEY", ""),
+		HuggingFaceModel:  getEnv("HUGGINGFACE_MODEL", ""),
 	}
 }
 

@@ -1,5 +1,11 @@
 .PHONY: help build run test clean docker-up docker-down migrate
 
+# Load .env file and export all variables so Make targets can use them
+ifneq (,$(wildcard .env))
+  include .env
+  export
+endif
+
 help: ## Show this help message
 	@echo 'Usage: make [target]'
 	@echo ''
