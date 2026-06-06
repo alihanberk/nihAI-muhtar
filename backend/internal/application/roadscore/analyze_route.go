@@ -308,10 +308,20 @@ func mockSegmentScore(lat, lng float64) *huggingface.ClassifyResult {
 		cat = "CRITICAL"
 	}
 
+	// Derive a second hash for confidence so it varies independently of score.
+	h2 := uint32(2166136261)
+	s2 := fmt.Sprintf("%.4f:%.4f:conf", lat, lng)
+	for i := 0; i < len(s2); i++ {
+		h2 ^= uint32(s2[i])
+		h2 *= 16777619
+	}
+	// Range: 0.63 – 0.96 (realistic AI confidence spread)
+	confidence := 0.63 + float64(h2%34)/100.0
+
 	return &huggingface.ClassifyResult{
 		DamageScore: score,
 		Category:    cat,
-		Confidence:  0.72, // synthetic but plausible
+		Confidence:  confidence,
 	}
 }
 

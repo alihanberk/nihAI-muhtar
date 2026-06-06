@@ -92,7 +92,7 @@ func main() {
 	streetViewRateLimiter := rlmiddleware.NewStreetViewRateLimiter()
 	_ = streetViewRateLimiter // available for use in subrouters
 
-	// Initialize RoadScore use case + handler
+	// Initialize RoadScore use cases + handler
 	analyzeUC := appRoadscore.NewAnalyzeRouteUseCase(
 		roadScoreRepo,
 		directionsClient,
@@ -101,7 +101,13 @@ func main() {
 		blurProcessor,
 		roadScoreCache,
 	)
-	roadScoreHandler := handler.NewRoadScoreHandler(analyzeUC, roadScoreRepo)
+	scanAreaUC := appRoadscore.NewScanAreaUseCase(
+		streetViewClient,
+		hfClient,
+		blurProcessor,
+		roadScoreCache,
+	)
+	roadScoreHandler := handler.NewRoadScoreHandler(analyzeUC, scanAreaUC, roadScoreRepo)
 
 	// Initialize FacadeScore use case + handler
 	facadeDetector := huggingface.NewFacadeDetector(config.HuggingFaceAPIKey)
@@ -168,6 +174,8 @@ func main() {
 		// RoadScore routes
 		r.Route("/road-score", func(r chi.Router) {
 			r.Post("/analyze", roadScoreHandler.AnalyzeRoute)
+			// Area scan has its own generous timeout — it can involve many Street View calls
+			r.With(middleware.Timeout(5*time.Minute)).Post("/scan-area", roadScoreHandler.ScanArea)
 			r.Get("/analysis/{analysisId}", roadScoreHandler.GetAnalysis)
 			r.Get("/routes/{routeId}/segments", roadScoreHandler.GetSegments)
 			r.Get("/analysis/{analysisId}/report", roadScoreHandler.GenerateReport)
