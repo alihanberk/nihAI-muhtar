@@ -1,0 +1,6 @@
+bin/
+.env
+.env.*
+*.out
+coverage.out
+coverage.html

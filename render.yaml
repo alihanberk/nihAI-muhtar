@@ -1,0 +1,42 @@
+# Render.com Blueprint — hackathon kurallarına uygun backend + PostgreSQL
+# Dashboard: New > Blueprint > Connect repo > render.yaml
+databases:
+  - name: nihai-muhtar-db
+    plan: free
+    databaseName: muhtar_db
+    user: muhtar
+
+services:
+  - type: web
+    name: nihai-muhtar-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health/live
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nihai-muhtar-db
+          property: connectionString
+      - key: DB_SSLMODE
+        value: require
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRATION_HOURS
+        value: "24"
+      - key: LOG_LEVEL
+        value: info
+      - key: LOG_FORMAT
+        value: json
+      - key: KAFKA_ENABLED
+        value: "false"
+      - key: HUGGINGFACE_MODEL
+        value: openai/clip-vit-base-patch32
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: HUGGINGFACE_API_KEY
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false

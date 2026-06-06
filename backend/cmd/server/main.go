@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -42,12 +43,13 @@ func main() {
 
 	// Initialize database connection
 	dbConfig := database.Config{
+		URL:      config.DatabaseURL,
 		Host:     config.DBHost,
 		Port:     config.DBPort,
 		User:     config.DBUser,
 		Password: config.DBPassword,
 		DBName:   config.DBName,
-		SSLMode:  "disable",
+		SSLMode:  config.DBSSLMode,
 	}
 
 	db, err := database.NewPostgresConnection(dbConfig)
@@ -114,7 +116,7 @@ func main() {
 
 	// CORS
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedOrigins:   config.CORSAllowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
@@ -209,35 +211,61 @@ func main() {
 type Config struct {
 	ServerHost        string
 	ServerPort        string
+	DatabaseURL       string
 	DBHost            string
 	DBPort            string
 	DBUser            string
 	DBPassword        string
 	DBName            string
+	DBSSLMode         string
 	RedisHost         string
 	RedisPort         string
 	JWTSecret         string
 	GoogleAPIKey      string
 	HuggingFaceAPIKey string
 	HuggingFaceModel  string
+	CORSAllowedOrigins []string
 }
 
 func loadConfig() *Config {
-	return &Config{
-		ServerHost:        getEnv("SERVER_HOST", "0.0.0.0"),
-		ServerPort:        getEnv("SERVER_PORT", "8080"),
-		DBHost:            getEnv("DB_HOST", "localhost"),
-		DBPort:            getEnv("DB_PORT", "5432"),
-		DBUser:            getEnv("DB_USER", "muhtar"),
-		DBPassword:        getEnv("DB_PASSWORD", "muhtar123"),
-		DBName:            getEnv("DB_NAME", "muhtar_db"),
-		RedisHost:         getEnv("REDIS_HOST", "localhost"),
-		RedisPort:         getEnv("REDIS_PORT", "6379"),
-		JWTSecret:         getEnv("JWT_SECRET", "your-secret-key-change-this-in-production"),
-		GoogleAPIKey:      getEnv("GOOGLE_API_KEY", ""),
-		HuggingFaceAPIKey: getEnv("HUGGINGFACE_API_KEY", ""),
-		HuggingFaceModel:  getEnv("HUGGINGFACE_MODEL", ""),
+	serverPort := getEnv("PORT", "")
+	if serverPort == "" {
+		serverPort = getEnv("SERVER_PORT", "8080")
 	}
+
+	corsOrigins := parseCSVEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000")
+
+	return &Config{
+		ServerHost:         getEnv("SERVER_HOST", "0.0.0.0"),
+		ServerPort:         serverPort,
+		DatabaseURL:        getEnv("DATABASE_URL", ""),
+		DBHost:             getEnv("DB_HOST", "localhost"),
+		DBPort:             getEnv("DB_PORT", "5432"),
+		DBUser:             getEnv("DB_USER", "muhtar"),
+		DBPassword:         getEnv("DB_PASSWORD", "muhtar123"),
+		DBName:             getEnv("DB_NAME", "muhtar_db"),
+		DBSSLMode:          getEnv("DB_SSLMODE", "disable"),
+		RedisHost:          getEnv("REDIS_HOST", "localhost"),
+		RedisPort:          getEnv("REDIS_PORT", "6379"),
+		JWTSecret:          getEnv("JWT_SECRET", "your-secret-key-change-this-in-production"),
+		GoogleAPIKey:       getEnv("GOOGLE_API_KEY", ""),
+		HuggingFaceAPIKey:  getEnv("HUGGINGFACE_API_KEY", ""),
+		HuggingFaceModel:   getEnv("HUGGINGFACE_MODEL", "openai/clip-vit-base-patch32"),
+		CORSAllowedOrigins: corsOrigins,
+	}
+}
+
+func parseCSVEnv(key, defaultValue string) []string {
+	raw := getEnv(key, defaultValue)
+	parts := strings.Split(raw, ",")
+	origins := make([]string, 0, len(parts))
+	for _, part := range parts {
+		trimmed := strings.TrimSpace(part)
+		if trimmed != "" {
+			origins = append(origins, trimmed)
+		}
+	}
+	return origins
 }
 
 func getEnv(key, defaultValue string) string {

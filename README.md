@@ -61,11 +61,20 @@ npm install
 npm run dev
 ```
 
-### Erişim
+### Erişim (Local)
 
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:8080
-- **API Documentation**: http://localhost:8080/docs
+- **Health Check**: http://localhost:8080/health/live
+
+### Canlı Demo (Production)
+
+| Servis | Platform | URL |
+|--------|----------|-----|
+| Frontend | Vercel | `https://[proje-adiniz].vercel.app` |
+| Backend API | Render.com | `https://nihai-muhtar-api.onrender.com` |
+
+> Deploy adımları: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)
 
 ## 📁 Proje Yapısı
 
@@ -96,16 +105,19 @@ nihai-muhtar/
 Bu proje Cursor IDE ile geliştirilmiştir ve aşağıdaki AI araçları kullanılmıştır:
 
 ### Cursor Features Kullanımı
-- **Cursor Agent**: [Kullanım detayları]
-- **Cursor Rules**: `.cursor/rules/` klasöründe proje kuralları tanımlanmıştır
-- **AI Assisted Development**: [Hangi bölümlerde kullanıldı]
+- **Cursor Agent**: Backend Clean Architecture iskeleti, RoadScore use case, Hugging Face client ve KVKK blur pipeline agent ile üretildi
+- **Cursor Rules**: `.cursor/rules/` ve `.cursor/AGENTS.md` — masterfabric-go konvansiyonları, KVKK kısıtları, deployment kuralları
+- **AI Assisted Development**: `backend/internal/application/roadscore/`, `infrastructure/huggingface/`, `infrastructure/blur/`, frontend `road-score` sayfası
 
 ### Prompt Engineering Teknikleri
-- [Kullanılan teknikler]
+- Katmanlı mimari promptları (domain → application → infrastructure ayrımı)
+- KVKK odaklı kısıt promptları (yüz/plaka tanıma yasağı, blur zorunluluğu)
+- Hackathon tech stack uyumluluk kontrolü (`docs/project-rules.txt` referanslı)
 
 ### AI Model Entegrasyonu
-- [Hugging Face model detayları]
-- [Fine-tuning bilgileri]
+- **Platform**: Hugging Face Inference API
+- **Model**: `openai/clip-vit-base-patch32` — kentsel hasar skorlama
+- **Pipeline**: Street View görüntüsü → blur (KVKK) → HF inference → segment skoru
 
 ## 📊 Özellikler
 

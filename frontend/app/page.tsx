@@ -18,8 +18,9 @@ export default function Home() {
   }, [user, router]);
 
   useEffect(() => {
-    // Backend health check
-    fetch('http://localhost:8080/health/live')
+    const apiBase = process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, '') ?? 'http://localhost:8080';
+
+    fetch(`${apiBase}/health/live`)
       .then((res) => res.json())
       .then((data) => {
         setBackendStatus('Backend bağlantısı başarılı ✓');
