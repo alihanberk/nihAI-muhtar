@@ -2,6 +2,7 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"sync"
 
@@ -53,4 +54,11 @@ func (rl *StreetViewRateLimiter) RateLimit(next http.Handler) http.Handler {
 // Use this in goroutines rather than as HTTP middleware.
 func (rl *StreetViewRateLimiter) Wait(r *http.Request) error {
 	return rl.limiter.Wait(r.Context())
+}
+
+// WaitCtx blocks until a Street View token is available or ctx is cancelled.
+// Use this inside background goroutines (e.g. batch analysis workers) where
+// no *http.Request is available.
+func (rl *StreetViewRateLimiter) WaitCtx(ctx context.Context) error {
+	return rl.limiter.Wait(ctx)
 }

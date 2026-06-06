@@ -90,7 +90,6 @@ func main() {
 	hfClient := huggingface.NewClient(config.HuggingFaceAPIKey, config.HuggingFaceModel)
 	blurProcessor := blur.NewProcessor()
 	streetViewRateLimiter := rlmiddleware.NewStreetViewRateLimiter()
-	_ = streetViewRateLimiter // available for use in subrouters
 
 	// Initialize RoadScore use cases + handler
 	analyzeUC := appRoadscore.NewAnalyzeRouteUseCase(
@@ -116,6 +115,7 @@ func main() {
 		streetViewClient,
 		facadeDetector,
 		blurProcessor,
+		streetViewRateLimiter,
 	)
 	facadeHandler := handler.NewFacadeScoreHandler(facadeAnalyzeUC, facadeRepo)
 

@@ -10,15 +10,70 @@ import (
 	"image/draw"
 	"image/jpeg"
 	_ "image/jpeg"
+	"io"
 	"net/http"
 	"time"
 )
 
 const (
-	detrModel  = "facebook/detr-resnet-50"
-	clipModel  = "openai/clip-vit-base-patch32"
-	facadeTimeout = 15 * time.Second
+	detrModel     = "facebook/detr-resnet-50"
+	clipModel     = "openai/clip-vit-base-patch32"
+	facadeTimeout = 90 * time.Second
+
+	// modelLoadMaxWait is the maximum time to wait for a cold-starting model.
+	modelLoadMaxWait = 60 * time.Second
+	// modelLoadDefault is used when estimated_time is missing from the 503 body.
+	modelLoadDefault = 25 * time.Second
 )
+
+// hfModelLoading is a sentinel error type that signals the HuggingFace model is
+// warming up. The caller (withRetry) should wait before retrying.
+type hfModelLoading struct {
+	waitFor time.Duration
+}
+
+func (e hfModelLoading) Error() string {
+	return fmt.Sprintf("HuggingFace model loading — estimated wait %.0fs", e.waitFor.Seconds())
+}
+
+// IsModelLoading reports whether err originated from a cold-start 503 response.
+// Use this in retry loops to skip the normal back-off delay (the wait was already
+// performed inside waitAndRetryOn503).
+func IsModelLoading(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := err.(hfModelLoading)
+	return ok
+}
+
+// waitAndRetryOn503 reads the 503 response body, extracts the estimated_time
+// field if present, waits for that duration (capped at modelLoadMaxWait), and
+// returns an hfModelLoading error so the caller knows to retry.
+func waitAndRetryOn503(ctx context.Context, resp *http.Response, model string) error {
+	body, _ := io.ReadAll(resp.Body)
+
+	var payload struct {
+		EstimatedTime float64 `json:"estimated_time"`
+	}
+	_ = json.Unmarshal(body, &payload)
+
+	wait := modelLoadDefault
+	if payload.EstimatedTime > 0 {
+		wait = time.Duration(payload.EstimatedTime * float64(time.Second))
+	}
+	if wait > modelLoadMaxWait {
+		wait = modelLoadMaxWait
+	}
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-time.After(wait):
+	}
+
+	return hfModelLoading{waitFor: wait}
+}
 
 // defectLabels are the CLIP candidate labels for facade damage classification.
 // Each maps to a DefectType in the domain layer.
@@ -128,7 +183,7 @@ func (fd *FacadeDetector) DetectFacade(ctx context.Context, imageData []byte) ([
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusServiceUnavailable {
-		return nil, fmt.Errorf("DETR model loading")
+		return nil, waitAndRetryOn503(ctx, resp, detrModel)
 	}
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("DETR API returned HTTP %d", resp.StatusCode)
@@ -222,7 +277,7 @@ func (fd *FacadeDetector) ClassifyFacadeDefects(ctx context.Context, imageData [
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusServiceUnavailable {
-		return nil, fmt.Errorf("CLIP model loading")
+		return nil, waitAndRetryOn503(ctx, resp, clipModel)
 	}
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("CLIP API returned HTTP %d", resp.StatusCode)

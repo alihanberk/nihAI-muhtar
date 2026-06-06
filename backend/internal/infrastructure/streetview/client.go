@@ -35,6 +35,20 @@ func NewClient(apiKey string) *Client {
 	}
 }
 
+// GetURL returns the public Street View Static API URL for the given coordinates
+// without making a network request. Used to persist the URL alongside analysis results.
+func (c *Client) GetURL(lat, lng, heading float64) string {
+	params := url.Values{}
+	params.Set("size", fmt.Sprintf("%dx%d", imageWidth, imageHeight))
+	params.Set("location", fmt.Sprintf("%f,%f", lat, lng))
+	params.Set("heading", fmt.Sprintf("%.1f", heading))
+	params.Set("fov", fmt.Sprintf("%d", defaultFOV))
+	params.Set("pitch", fmt.Sprintf("%d", defaultPitch))
+	params.Set("source", "outdoor")
+	params.Set("key", c.apiKey)
+	return fmt.Sprintf("%s?%s", streetViewBaseURL, params.Encode())
+}
+
 // FetchImage downloads a 640×640 Street View image at the given coordinates.
 // heading is the compass direction of the camera (0–360°); pitch tilts up/down.
 // Returns the raw JPEG bytes.

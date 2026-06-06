@@ -12,6 +12,7 @@ import {
   analyzeDistrict,
   listBuildingsByDistrict,
   getPriorityBuildings,
+  getBuilding,
   getJob,
   submitCitizenReport,
 } from '@/lib/facadescore';
@@ -131,6 +132,18 @@ export default function FacadeScorePage() {
     }
   };
 
+  const handleBuildingSelect = async (b: BuildingAnalysis) => {
+    // List endpoints don't include defects; fetch the full record so the
+    // detail panel can show bounding boxes and the defect tab.
+    setSelectedBuilding(b); // show immediately with available data
+    try {
+      const full = await getBuilding(b.id);
+      setSelectedBuilding(full);
+    } catch {
+      // keep the partial record already shown
+    }
+  };
+
   const handleCitizenReport = async () => {
     if (!selectedBuilding || !citizenForm.description) return;
     setCitizenSubmitting(true);
@@ -154,7 +167,7 @@ export default function FacadeScorePage() {
   return (
     <div className="flex h-screen bg-slate-950 text-white overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-80 flex-shrink-0 flex flex-col bg-slate-900 border-r border-slate-800">
+      <aside className="w-80 shrink-0 flex flex-col bg-slate-900 border-r border-slate-800">
         {/* Logo / title */}
         <div className="px-5 py-4 border-b border-slate-800">
           <div className="flex items-center gap-2">
@@ -249,7 +262,7 @@ export default function FacadeScorePage() {
               buildings.map(b => (
                 <button
                   key={b.id}
-                  onClick={() => setSelectedBuilding(b)}
+                  onClick={() => handleBuildingSelect(b)}
                   className={`w-full text-left rounded-lg p-3 transition-all border ${
                     selectedBuilding?.id === b.id
                       ? 'border-blue-500 bg-blue-950/40'
@@ -316,7 +329,7 @@ export default function FacadeScorePage() {
             <FacadeScoreMap
               buildings={buildings}
               selectedBuildingId={selectedBuilding?.id ?? null}
-              onBuildingSelect={setSelectedBuilding}
+              onBuildingSelect={handleBuildingSelect}
               center={mapCenter}
               neighborhood={neighborhood ? {
                 lat: neighborhood.lat,
@@ -329,7 +342,7 @@ export default function FacadeScorePage() {
 
           {/* Building detail panel */}
           {selectedBuilding && (
-            <div className="w-96 flex-shrink-0 border-l border-slate-800 overflow-hidden">
+            <div className="w-96 shrink-0 border-l border-slate-800 overflow-hidden">
               <BuildingPanel
                 building={selectedBuilding}
                 onClose={() => setSelectedBuilding(null)}

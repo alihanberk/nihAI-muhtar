@@ -10,6 +10,7 @@ import (
 	"github.com/nihai-muhtar/backend/internal/domain/facadescore"
 	"github.com/nihai-muhtar/backend/internal/infrastructure/blur"
 	hf "github.com/nihai-muhtar/backend/internal/infrastructure/huggingface"
+	rlmiddleware "github.com/nihai-muhtar/backend/internal/infrastructure/middleware"
 	"github.com/nihai-muhtar/backend/internal/infrastructure/streetview"
 )
 
@@ -32,6 +33,7 @@ type AnalyzeBuildingUseCase struct {
 	streetView  *streetview.Client
 	hfDetector  *hf.FacadeDetector
 	blurProc    *blur.Processor
+	svLimiter   *rlmiddleware.StreetViewRateLimiter
 	queue       *JobQueue
 }
 
@@ -41,12 +43,14 @@ func NewAnalyzeBuildingUseCase(
 	sv *streetview.Client,
 	detector *hf.FacadeDetector,
 	bp *blur.Processor,
+	svLimiter *rlmiddleware.StreetViewRateLimiter,
 ) *AnalyzeBuildingUseCase {
 	return &AnalyzeBuildingUseCase{
 		repo:       repo,
 		streetView: sv,
 		hfDetector: detector,
 		blurProc:   bp,
+		svLimiter:  svLimiter,
 		queue:      NewJobQueue(),
 	}
 }
@@ -58,27 +62,25 @@ func (uc *AnalyzeBuildingUseCase) Execute(ctx context.Context, req facadescore.A
 		req.RadiusM = 500
 	}
 
-	// 1. Create the top-level job record
+	// 1. Sample a grid first so total_count is known before job creation
+	coords := sampleGrid(req.CenterLat, req.CenterLng, req.RadiusM)
+
+	// 2. Create the top-level job record with accurate total_count
 	job := &facadescore.AnalysisJob{
-		District:  req.District,
-		CenterLat: req.CenterLat,
-		CenterLng: req.CenterLng,
-		RadiusM:   req.RadiusM,
-		Status:    facadescore.JobPending,
+		District:   req.District,
+		CenterLat:  req.CenterLat,
+		CenterLng:  req.CenterLng,
+		RadiusM:    req.RadiusM,
+		Status:     facadescore.JobPending,
+		TotalCount: len(coords),
 	}
 	if err := uc.repo.CreateJob(ctx, job); err != nil {
 		return nil, fmt.Errorf("failed to create analysis job: %w", err)
 	}
 
-	// 2. Sample a grid of building coordinates within the radius
-	coords := sampleGrid(req.CenterLat, req.CenterLng, req.RadiusM)
-
 	if err := uc.repo.UpdateJobStatus(ctx, job.ID, facadescore.JobProcessing); err != nil {
 		slog.Warn("failed to update job status to processing", "job_id", job.ID)
 	}
-
-	// Update total count
-	job.TotalCount = len(coords)
 
 	// 3. Submit each coordinate as an independent building job
 	bgCtx := context.Background() // detached from request context so shutdown doesn't kill jobs
@@ -112,13 +114,14 @@ func (uc *AnalyzeBuildingUseCase) Execute(ctx context.Context, req facadescore.A
 // It follows the full pipeline: Street View → blur → detect → classify → persist.
 func (uc *AnalyzeBuildingUseCase) processBuilding(ctx context.Context, job BuildingJob) {
 	building := &facadescore.BuildingAnalysis{
-		JobID:        job.JobID,
-		District:     job.District,
-		Address:      job.Address,
-		Lat:          job.Lat,
-		Lng:          job.Lng,
-		Heading:      job.Heading,
-		AnalysisYear: time.Now().UTC().Year(),
+		JobID:         job.JobID,
+		District:      job.District,
+		Address:       job.Address,
+		Lat:           job.Lat,
+		Lng:           job.Lng,
+		Heading:       job.Heading,
+		StreetViewURL: uc.streetView.GetURL(job.Lat, job.Lng, job.Heading),
+		AnalysisYear:  time.Now().UTC().Year(),
 	}
 
 	if err := uc.repo.CreateBuilding(ctx, building); err != nil {
@@ -126,7 +129,13 @@ func (uc *AnalyzeBuildingUseCase) processBuilding(ctx context.Context, job Build
 		return
 	}
 
-	// ── Street View fetch (with retry) ───────────────────────────────────────
+	// ── Street View fetch (with rate limit + retry) ───────────────────────────
+	if err := uc.svLimiter.WaitCtx(ctx); err != nil {
+		slog.Warn("rate limiter context cancelled before street view fetch", "lat", job.Lat, "error", err)
+		_ = uc.repo.IncrementJobDone(ctx, job.JobID)
+		return
+	}
+
 	imageData, err := withRetry(ctx, retryAttempts, func() ([]byte, error) {
 		return uc.streetView.FetchImage(ctx, job.Lat, job.Lng, job.Heading)
 	})
@@ -265,6 +274,8 @@ func sampleGrid(centerLat, centerLng float64, radiusM int) [][2]float64 {
 }
 
 // withRetry executes fn up to maxAttempts times, returning on first success.
+// When fn returns an hf.ModelLoadingError the built-in wait has already been
+// served inside the error producer, so no additional back-off is applied.
 func withRetry[T any](ctx context.Context, maxAttempts int, fn func() (T, error)) (T, error) {
 	var zero T
 	var lastErr error
@@ -277,6 +288,10 @@ func withRetry[T any](ctx context.Context, maxAttempts int, fn func() (T, error)
 		lastErr = err
 
 		if attempt < maxAttempts {
+			// hfModelLoading already waited inside waitAndRetryOn503; skip back-off.
+			if hf.IsModelLoading(err) {
+				continue
+			}
 			select {
 			case <-ctx.Done():
 				return zero, ctx.Err()
