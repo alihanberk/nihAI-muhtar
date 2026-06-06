@@ -121,6 +121,8 @@ func (uc *AnalyzeBuildingUseCase) processBuilding(ctx context.Context, job Build
 		Lng:           job.Lng,
 		Heading:       job.Heading,
 		StreetViewURL: uc.streetView.GetURL(job.Lat, job.Lng, job.Heading),
+		HealthScore:   0,
+		RiskLevel:     facadescore.RiskHealthy, // satisfies risk_level CHECK constraint before analysis fills it in
 		AnalysisYear:  time.Now().UTC().Year(),
 	}
 
