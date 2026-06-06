@@ -14,13 +14,19 @@ import (
 // RoadScoreHandler handles HTTP requests for the RoadScore module.
 type RoadScoreHandler struct {
 	analyzeUC *appRoadscore.AnalyzeRouteUseCase
+	scanUC    *appRoadscore.ScanAreaUseCase
 	repo      roadscore.Repository
 }
 
 // NewRoadScoreHandler creates a RoadScoreHandler.
-func NewRoadScoreHandler(analyzeUC *appRoadscore.AnalyzeRouteUseCase, repo roadscore.Repository) *RoadScoreHandler {
+func NewRoadScoreHandler(
+	analyzeUC *appRoadscore.AnalyzeRouteUseCase,
+	scanUC *appRoadscore.ScanAreaUseCase,
+	repo roadscore.Repository,
+) *RoadScoreHandler {
 	return &RoadScoreHandler{
 		analyzeUC: analyzeUC,
+		scanUC:    scanUC,
 		repo:      repo,
 	}
 }
@@ -120,6 +126,55 @@ func (h *RoadScoreHandler) GenerateReport(w http.ResponseWriter, r *http.Request
 
 	report := buildReport(analysis)
 	respondWithJSON(w, http.StatusOK, SuccessResponse{Data: report})
+}
+
+// ─── Area scan ────────────────────────────────────────────────────────────────
+
+// AreaScanRequest is the JSON body accepted by POST /road-score/scan-area.
+type AreaScanHTTPRequest struct {
+	CenterLat        float64 `json:"center_lat"`
+	CenterLng        float64 `json:"center_lng"`
+	RadiusMeters     float64 `json:"radius_meters"`
+	NeighborhoodName string  `json:"neighborhood_name"`
+}
+
+// ScanArea scores every sampled point within the given circular neighborhood zone.
+// The response includes per-point damage scores and aggregate summary statistics.
+func (h *RoadScoreHandler) ScanArea(w http.ResponseWriter, r *http.Request) {
+	var req AreaScanHTTPRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondWithError(w, http.StatusBadRequest, "invalid_request", "Invalid JSON body")
+		return
+	}
+
+	if req.CenterLat == 0 || req.CenterLng == 0 {
+		respondWithError(w, http.StatusBadRequest, "missing_coordinates", "center_lat and center_lng are required")
+		return
+	}
+	if req.RadiusMeters <= 0 {
+		req.RadiusMeters = 600
+	}
+
+	// Use a generous timeout — area scans can involve many Street View calls
+	ctx := r.Context()
+
+	domainReq := roadscore.AreaScanRequest{
+		CenterLat:        req.CenterLat,
+		CenterLng:        req.CenterLng,
+		RadiusMeters:     req.RadiusMeters,
+		NeighborhoodName: req.NeighborhoodName,
+	}
+
+	result, err := h.scanUC.Execute(ctx, domainReq)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "scan_failed", err.Error())
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, SuccessResponse{
+		Data:    result,
+		Message: "Area scan completed",
+	})
 }
 
 // ─── Report model ─────────────────────────────────────────────────────────────

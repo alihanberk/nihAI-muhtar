@@ -107,6 +107,54 @@ type AnalyzeResponse struct {
 	RecommendedRouteID string `json:"recommended_route_id"`
 }
 
+// ──────────────────────────────────────────────────────────────────────────────
+// Area Scan — scores every sampled point within a circular neighborhood zone
+// ──────────────────────────────────────────────────────────────────────────────
+
+// AreaScanRequest is the input DTO for the ScanArea use case.
+type AreaScanRequest struct {
+	CenterLat        float64 `json:"center_lat"`
+	CenterLng        float64 `json:"center_lng"`
+	RadiusMeters     float64 `json:"radius_meters"`
+	NeighborhoodName string  `json:"neighborhood_name"`
+}
+
+// AreaScanPoint is a single geo-scored sample from an area scan.
+type AreaScanPoint struct {
+	Lat            float64        `json:"lat"`
+	Lng            float64        `json:"lng"`
+	DamageScore    float64        `json:"damage_score"`
+	DamageCategory DamageCategory `json:"damage_category"`
+	Confidence     float64        `json:"confidence"`
+	FromCache      bool           `json:"from_cache"`
+}
+
+// AreaScanSummary contains aggregate statistics for the whole scanned area.
+type AreaScanSummary struct {
+	AvgDamageScore  float64        `json:"avg_damage_score"`
+	OverallCategory DamageCategory `json:"overall_category"`
+	GoodCount       int            `json:"good_count"`
+	FairCount       int            `json:"fair_count"`
+	PoorCount       int            `json:"poor_count"`
+	CriticalCount   int            `json:"critical_count"`
+	TotalPoints     int            `json:"total_points"`
+	ScoredPoints    int            `json:"scored_points"`
+	WorstPoint      *AreaScanPoint `json:"worst_point,omitempty"`
+	BestPoint       *AreaScanPoint `json:"best_point,omitempty"`
+}
+
+// AreaScanResponse is the full output of a neighborhood area scan.
+type AreaScanResponse struct {
+	ScanID           string          `json:"scan_id"`
+	NeighborhoodName string          `json:"neighborhood_name"`
+	CenterLat        float64         `json:"center_lat"`
+	CenterLng        float64         `json:"center_lng"`
+	RadiusMeters     float64         `json:"radius_meters"`
+	Points           []AreaScanPoint `json:"points"`
+	Summary          AreaScanSummary `json:"summary"`
+	DurationMs       int64           `json:"duration_ms"`
+}
+
 // ScoreToDamageCategory maps a 0–100 numeric score to the matching category.
 func ScoreToDamageCategory(score float64) DamageCategory {
 	switch {

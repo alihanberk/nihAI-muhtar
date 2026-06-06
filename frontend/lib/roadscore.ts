@@ -82,6 +82,66 @@ export async function getReport(analysisId: string): Promise<unknown> {
   return json.data;
 }
 
+// ─── Area Scan ────────────────────────────────────────────────────────────────
+
+export interface AreaScanPoint {
+  lat: number;
+  lng: number;
+  damage_score: number;
+  damage_category: DamageCategory;
+  confidence: number;
+  from_cache: boolean;
+}
+
+export interface AreaScanSummary {
+  avg_damage_score: number;
+  overall_category: DamageCategory;
+  good_count: number;
+  fair_count: number;
+  poor_count: number;
+  critical_count: number;
+  total_points: number;
+  scored_points: number;
+  worst_point?: AreaScanPoint;
+  best_point?: AreaScanPoint;
+}
+
+export interface AreaScanResponse {
+  scan_id: string;
+  neighborhood_name: string;
+  center_lat: number;
+  center_lng: number;
+  radius_meters: number;
+  points: AreaScanPoint[];
+  summary: AreaScanSummary;
+  duration_ms: number;
+}
+
+export interface AreaScanRequest {
+  center_lat: number;
+  center_lng: number;
+  radius_meters: number;
+  neighborhood_name: string;
+}
+
+export async function scanArea(req: AreaScanRequest): Promise<AreaScanResponse> {
+  const res = await fetch(`${API_URL}/road-score/scan-area`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+    // Area scans can take up to 5 minutes with many Street View calls
+    signal: AbortSignal.timeout(5 * 60 * 1000),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err as { message?: string }).message ?? `HTTP ${res.status}`);
+  }
+
+  const json = await res.json();
+  return json.data as AreaScanResponse;
+}
+
 /** Decode a Google-encoded polyline to [lng, lat] coordinate pairs for Mapbox */
 export function decodePolyline(encoded: string): [number, number][] {
   const coords: [number, number][] = [];
