@@ -3,6 +3,7 @@
 databases:
   - name: nihai-muhtar-db
     plan: free
+    region: frankfurt
     databaseName: muhtar_db
     user: muhtar
 
