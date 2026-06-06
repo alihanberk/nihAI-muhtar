@@ -27,7 +27,15 @@ const apps: AppCard[] = [
     color: "text-blue-600",
     href: "/road-score",
   },
-  // More apps will be added here
+  {
+    id: "facadescore",
+    title: "FacadeScore",
+    description: "Bina cephelerindeki yapısal bozulmaları tespit et. Deprem riski odaklı sağlık haritası. DETR + CLIP ile iki aşamalı AI analizi.",
+    icon: "🏚️",
+    iconBg: "bg-orange-100",
+    color: "text-orange-600",
+    href: "/facade-score",
+  },
 ];
 
 export default function DashboardPage() {

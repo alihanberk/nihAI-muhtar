@@ -18,14 +18,15 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"github.com/nihai-muhtar/backend/internal/application/auth"
+	appFacade "github.com/nihai-muhtar/backend/internal/application/facadescore"
 	appRoadscore "github.com/nihai-muhtar/backend/internal/application/roadscore"
 	"github.com/nihai-muhtar/backend/internal/infrastructure/blur"
 	"github.com/nihai-muhtar/backend/internal/infrastructure/cache"
 	"github.com/nihai-muhtar/backend/internal/infrastructure/database"
 	"github.com/nihai-muhtar/backend/internal/infrastructure/directions"
 	"github.com/nihai-muhtar/backend/internal/infrastructure/handler"
-	rlmiddleware "github.com/nihai-muhtar/backend/internal/infrastructure/middleware"
 	"github.com/nihai-muhtar/backend/internal/infrastructure/huggingface"
+	rlmiddleware "github.com/nihai-muhtar/backend/internal/infrastructure/middleware"
 	"github.com/nihai-muhtar/backend/internal/infrastructure/repository"
 	"github.com/nihai-muhtar/backend/internal/infrastructure/streetview"
 	"github.com/nihai-muhtar/backend/internal/shared/security"
@@ -63,6 +64,7 @@ func main() {
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(db)
 	roadScoreRepo := repository.NewRoadScoreRepository(db)
+	facadeRepo := repository.NewFacadeScoreRepository(db)
 
 	// Initialize services
 	jwtConfig := security.JWTConfig{
@@ -100,6 +102,16 @@ func main() {
 		roadScoreCache,
 	)
 	roadScoreHandler := handler.NewRoadScoreHandler(analyzeUC, roadScoreRepo)
+
+	// Initialize FacadeScore use case + handler
+	facadeDetector := huggingface.NewFacadeDetector(config.HuggingFaceAPIKey)
+	facadeAnalyzeUC := appFacade.NewAnalyzeBuildingUseCase(
+		facadeRepo,
+		streetViewClient,
+		facadeDetector,
+		blurProcessor,
+	)
+	facadeHandler := handler.NewFacadeScoreHandler(facadeAnalyzeUC, facadeRepo)
 
 	// Initialize auth handler
 	authHandler := handler.NewAuthHandler(authService)
@@ -161,15 +173,18 @@ func main() {
 			r.Get("/analysis/{analysisId}/report", roadScoreHandler.GenerateReport)
 		})
 
-		// Detection routes (placeholders for now)
-		r.Post("/detections", handleCreateDetection)
-		r.Get("/detections", handleListDetections)
-		r.Get("/detections/{id}", handleGetDetection)
-
-		// Report routes (placeholders for now)
-		r.Post("/reports", handleCreateReport)
-		r.Get("/reports", handleListReports)
-		r.Get("/reports/{id}", handleGetReport)
+		// FacadeScore routes
+		r.Route("/facade-score", func(r chi.Router) {
+			r.Post("/analyze", facadeHandler.AnalyzeDistrict)
+			r.Get("/jobs/{jobId}", facadeHandler.GetJob)
+			r.Get("/buildings/{buildingId}", facadeHandler.GetBuilding)
+			r.Get("/buildings/{buildingId}/report", facadeHandler.GetBuildingReport)
+			r.Get("/districts/{district}/buildings", facadeHandler.ListBuildingsByDistrict)
+			r.Get("/priority", facadeHandler.GetPriorityBuildings)
+			r.Get("/heatmap", facadeHandler.ListAllHeatmaps)
+			r.Get("/heatmap/{district}", facadeHandler.GetDistrictHeatmap)
+			r.Post("/citizen-report", facadeHandler.SubmitCitizenReport)
+		})
 	})
 
 	// Start server

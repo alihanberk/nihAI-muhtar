@@ -1,5 +1,8 @@
 .PHONY: help build run test clean docker-up docker-down migrate
 
+# Ensure homebrew Go (Apple Silicon / Intel) is always on PATH
+export PATH := /opt/homebrew/bin:/usr/local/go/bin:$(HOME)/go/bin:$(PATH)
+
 # Load .env file and export all variables so Make targets can use them
 ifneq (,$(wildcard .env))
   include .env
