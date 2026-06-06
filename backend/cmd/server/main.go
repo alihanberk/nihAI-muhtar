@@ -18,6 +18,7 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"github.com/nihai-muhtar/backend/internal/application/auth"
+	appAirlens "github.com/nihai-muhtar/backend/internal/application/airlens"
 	appRoadscore "github.com/nihai-muhtar/backend/internal/application/roadscore"
 	"github.com/nihai-muhtar/backend/internal/infrastructure/blur"
 	"github.com/nihai-muhtar/backend/internal/infrastructure/cache"
@@ -27,6 +28,7 @@ import (
 	rlmiddleware "github.com/nihai-muhtar/backend/internal/infrastructure/middleware"
 	"github.com/nihai-muhtar/backend/internal/infrastructure/huggingface"
 	"github.com/nihai-muhtar/backend/internal/infrastructure/repository"
+	"github.com/nihai-muhtar/backend/internal/infrastructure/segmentation"
 	"github.com/nihai-muhtar/backend/internal/infrastructure/streetview"
 	"github.com/nihai-muhtar/backend/internal/shared/security"
 )
@@ -63,6 +65,7 @@ func main() {
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(db)
 	roadScoreRepo := repository.NewRoadScoreRepository(db)
+	airlensRepo := repository.NewAirlensRepository(db)
 
 	// Initialize services
 	jwtConfig := security.JWTConfig{
@@ -83,9 +86,11 @@ func main() {
 
 	// Initialize RoadScore infrastructure
 	roadScoreCache := cache.NewRoadScoreCache(rdb)
+	airlensCache := cache.NewAirlensCache(rdb)
 	directionsClient := directions.NewClient(config.GoogleAPIKey)
 	streetViewClient := streetview.NewClient(config.GoogleAPIKey)
 	hfClient := huggingface.NewClient(config.HuggingFaceAPIKey, config.HuggingFaceModel)
+	segClient := segmentation.NewClient(config.HuggingFaceAPIKey, config.SegmentationModel)
 	blurProcessor := blur.NewProcessor()
 	streetViewRateLimiter := rlmiddleware.NewStreetViewRateLimiter()
 	_ = streetViewRateLimiter // available for use in subrouters
@@ -106,6 +111,17 @@ func main() {
 		roadScoreCache,
 	)
 	roadScoreHandler := handler.NewRoadScoreHandler(analyzeUC, scanAreaUC, roadScoreRepo)
+
+	// Initialize AirLens use cases + handler
+	scanDistrictUC := appAirlens.NewScanDistrictUseCase(
+		streetViewClient,
+		segClient,
+		blurProcessor,
+		airlensCache,
+		airlensRepo,
+	)
+	coolRouteUC := appAirlens.NewCoolRouteUseCase(airlensRepo)
+	airlensHandler := handler.NewAirlensHandler(scanDistrictUC, coolRouteUC, airlensRepo)
 
 	// Initialize auth handler
 	authHandler := handler.NewAuthHandler(authService)
@@ -169,6 +185,15 @@ func main() {
 			r.Get("/analysis/{analysisId}/report", roadScoreHandler.GenerateReport)
 		})
 
+		// AirLens routes — green-score and heat-risk mapping
+		r.Route("/airlens", func(r chi.Router) {
+			r.With(middleware.Timeout(10*time.Minute)).Post("/scan", airlensHandler.ScanDistrict)
+			r.Get("/scans", airlensHandler.ListScans)
+			r.Get("/scans/{scanId}", airlensHandler.GetScan)
+			r.Get("/scans/{scanId}/report", airlensHandler.GetScanReport)
+			r.Get("/scans/{scanId}/cool-route", airlensHandler.GetCoolRoute)
+		})
+
 		// Detection routes (placeholders for now)
 		r.Post("/detections", handleCreateDetection)
 		r.Get("/detections", handleListDetections)
@@ -217,21 +242,22 @@ func main() {
 
 // Config holds application configuration
 type Config struct {
-	ServerHost        string
-	ServerPort        string
-	DatabaseURL       string
-	DBHost            string
-	DBPort            string
-	DBUser            string
-	DBPassword        string
-	DBName            string
-	DBSSLMode         string
-	RedisHost         string
-	RedisPort         string
-	JWTSecret         string
-	GoogleAPIKey      string
-	HuggingFaceAPIKey string
-	HuggingFaceModel  string
+	ServerHost         string
+	ServerPort         string
+	DatabaseURL        string
+	DBHost             string
+	DBPort             string
+	DBUser             string
+	DBPassword         string
+	DBName             string
+	DBSSLMode          string
+	RedisHost          string
+	RedisPort          string
+	JWTSecret          string
+	GoogleAPIKey       string
+	HuggingFaceAPIKey  string
+	HuggingFaceModel   string
+	SegmentationModel  string
 	CORSAllowedOrigins []string
 }
 
@@ -259,6 +285,7 @@ func loadConfig() *Config {
 		GoogleAPIKey:       getEnv("GOOGLE_API_KEY", ""),
 		HuggingFaceAPIKey:  getEnv("HUGGINGFACE_API_KEY", ""),
 		HuggingFaceModel:   getEnv("HUGGINGFACE_MODEL", "openai/clip-vit-base-patch32"),
+		SegmentationModel:  getEnv("SEGMENTATION_MODEL", "nvidia/segformer-b0-finetuned-ade-512-512"),
 		CORSAllowedOrigins: corsOrigins,
 	}
 }

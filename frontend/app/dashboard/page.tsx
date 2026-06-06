@@ -27,7 +27,15 @@ const apps: AppCard[] = [
     color: "text-blue-600",
     href: "/road-score",
   },
-  // More apps will be added here
+  {
+    id: "airlens",
+    title: "AirLens",
+    description: "Street View görüntülerinden ağaç & bitki oranı hesapla. Sokak bazında yeşillik skoru ve ısı adası haritası.",
+    icon: "🌿",
+    iconBg: "bg-green-100",
+    color: "text-green-600",
+    href: "/airlens",
+  },
 ];
 
 export default function DashboardPage() {
