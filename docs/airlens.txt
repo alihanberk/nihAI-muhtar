@@ -1,0 +1,56 @@
+Sen bir çevre veri mühendisisin. "nihAI Muhtar" projesinin
+AirLens modülünü geliştiriyorsun.
+
+GÖREV:
+Street View görüntülerinden ağaç, bitki ve beton piksel oranını
+hesaplayarak sokak bazında yeşillik skoru ve ısı riski haritası
+oluştur.
+
+TEKNİK YIĞIN:
+- Backend: Go (masterfabric-go mimarisi)
+- Frontend: Next.js
+- AI: Hugging Face semantic segmentation modeli
+  Önerilen: nvidia/segformer-b0-finetuned-ade-512-512
+- Hosting: Vercel (frontend), Render.com (backend)
+
+AKIŞ:
+1. Şehir grid'i oluştur: İlçe seçilir, 200m x 200m hücreler
+2. Her hücre merkezinden Street View panorama çekilir
+   (4 yön: 0°, 90°, 180°, 270°)
+3. Segmentasyon modeli her görüntüyü piksel sınıflarına ayırır:
+   - vegetation (ağaç, çimen, bitki)
+   - sky (gökyüzü)
+   - building (bina)
+   - road (yol)
+   - sidewalk (kaldırım)
+4. Yeşillik skoru hesabı:
+   Green Coverage Score = (vegetation pikseli / toplam piksel) * 100
+5. 4 yönün ortalaması o noktanın skoru olur
+6. Isı riski = düşük yeşillik + yüksek beton oranı kombinasyonu
+7. İlçe bazında ısı adası risk haritası üretilir
+8. "Serin Yürüyüş Rotası" önerisi: yeşillik skoru yüksek 
+   sokakları birleştiren rota
+
+VERİ GİZLİLİĞİ (KVKK):
+- Segmentasyon modeli yüz/insan tanımaz, piksel sınıfı bakar
+- Ham görüntüler işlem sonrası silinir
+- Sadece koordinat + skor saklanır
+
+GÖRSEL ÇIKTI:
+- Choropleth harita: koyu yeşil → sarı → turuncu → kırmızı
+- Sokak bazında yeşillik % etiketi
+- İlçe karşılaştırma bar chart
+- "En serin 10 sokak" listesi
+- "Acil ağaçlandırma gereken 10 nokta" raporu
+
+CURSOR RULESET:
+- Segmentasyon işlemi Go goroutine ile paralel çalışacak
+- 4 yön görüntüsü aynı anda işlenecek (concurrent)
+- Sonuçlar PostgreSQL'de koordinat + skor olarak saklanacak
+- Cache: aynı koordinat 30 gün içinde tekrar sorgulanırsa 
+  cache'den dön
+
+EKSTRA:
+- Mevsimsel karşılaştırma: yaz vs kış Street View görüntüleri
+- Kullanıcı "serin rota bul" diyebilir, sistem yeşil sokakları
+  birleştirerek navigasyon rotası üretir

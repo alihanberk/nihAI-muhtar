@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { getBackendOrigin } from '@/lib/api-config';
 
 export default function Home() {
   const { user } = useAuth();
@@ -18,9 +19,7 @@ export default function Home() {
   }, [user, router]);
 
   useEffect(() => {
-    const apiBase = process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, '') ?? 'http://localhost:8080';
-
-    fetch(`${apiBase}/health/live`)
+    fetch(`${getBackendOrigin()}/health/live`)
       .then((res) => res.json())
       .then((data) => {
         setBackendStatus('Backend bağlantısı başarılı ✓');

@@ -1,0 +1,54 @@
+Sen bir kentsel AI mühendisisin. "nihAI Muhtar" projesinin 
+RoadScore modülünü geliştiriyorsun.
+
+GÖREV:
+Google Street View Static API'den koordinat bazlı görüntü çekecek,
+Hugging Face'deki bir görüntü sınıflandırma modeliyle yol yüzeyi 
+hasar tespiti yapacak ve sonuçları rota üzerinde görselleştirecek 
+bir sistem kur.
+
+TEKNİK YIĞIN:
+- Backend: Go (masterfabric-go mimarisi)
+- Frontend: Next.js (Mapbox GL JS veya Google Maps JS API)
+- Mobil: Expo (React Native)
+- AI: Hugging Face Inference API
+- Hosting: Vercel (frontend), Render.com (backend)
+
+AKIŞ:
+1. Kullanıcı A noktası ve B noktası girer
+2. Google Directions API'den 3 alternatif rota çekilir
+3. Her rota üzerinde 150 metrede bir koordinat örneklenir
+4. Her koordinat için Street View Static API'den 640x640 görüntü çekilir
+5. Görüntü Go backend üzerinden Hugging Face'e gönderilir
+6. Model yol durumunu şu kategorilerde sınıflandırır:
+   - GOOD (0-25% hasar)
+   - FAIR (25-50% hasar)
+   - POOR (50-75% hasar)
+   - CRITICAL (75-100% hasar)
+7. Rota üzerindeki tüm segmentlerin ortalaması alınır
+8. Harita üzerinde segment segment renklendirme yapılır:
+   Yeşil → Sarı → Turuncu → Kırmızı
+9. Kullanıcıya 3 rota karşılaştırma kartı gösterilir:
+   En Hızlı | En Sağlam | Denge
+
+VERİ GİZLİLİĞİ (KVKK):
+- Görüntü işlemeden önce yüz ve plaka blur uygulanacak
+- Ham görüntüler işlem sonrası silinecek
+- Sadece hasar skoru ve koordinat saklanacak
+
+API KOTA YÖNETİMİ:
+- 10.000 istek kotasını aşmamak için Redis cache kullanılacak
+- Aynı koordinat 500 metre yakınında daha önce analiz edildiyse 
+  cache'den döndür
+
+CURSOR RULESET:
+- Go handler'lar /internal/handlers altında olacak
+- Her Street View isteği rate limit middleware'den geçecek
+- Hugging Face timeout süresi 10 saniye olacak
+- Tüm koordinatlar PostGIS formatında saklanacak
+
+ÇIKTI:
+- Harita üzerinde renkli rota katmanı
+- Her rota için özet kart: süre, mesafe, hasar %
+- Tıklanabilir segment: Street View fotoğrafı + hasar detayı
+- PDF rapor çıktısı (belediye için)

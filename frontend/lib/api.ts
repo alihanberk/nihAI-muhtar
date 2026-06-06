@@ -1,9 +1,9 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+import { getApiBaseUrl } from './api-config';
 
 export class ApiClient {
   private baseUrl: string;
 
-  constructor(baseUrl: string = API_BASE_URL) {
+  constructor(baseUrl: string = getApiBaseUrl()) {
     this.baseUrl = baseUrl;
   }
 
@@ -12,7 +12,7 @@ export class ApiClient {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
-    
+
     const config: RequestInit = {
       ...options,
       headers: {
@@ -23,13 +23,26 @@ export class ApiClient {
 
     try {
       const response = await fetch(url, config);
-      const data = await response.json();
+      const text = await response.text();
 
-      if (!response.ok) {
-        throw new Error(data.message || data.error || 'Something went wrong');
+      let data: Record<string, unknown>;
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        throw new Error(
+          response.ok
+            ? 'Sunucu geçersiz yanıt döndürdü'
+            : `API hatası (HTTP ${response.status}): ${text.slice(0, 120)}`
+        );
       }
 
-      return data;
+      if (!response.ok) {
+        throw new Error(
+          (data.message as string) || (data.error as string) || `HTTP ${response.status}`
+        );
+      }
+
+      return data as T;
     } catch (error) {
       if (error instanceof Error) {
         throw error;

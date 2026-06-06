@@ -5,8 +5,9 @@ import type {
   DistrictHeatmap,
   FacadeBuildingReport,
 } from '@/types/facadescore';
+import { getApiBaseUrl } from './api-config';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080/api/v1';
+const API_BASE = getApiBaseUrl();
 
 interface ApiResponse<T> {
   data: T;
@@ -19,13 +20,26 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
     ...options,
   });
 
+  const text = await res.text();
+  let json: ApiResponse<T> & Record<string, unknown>;
+  try {
+    json = text ? JSON.parse(text) : {};
+  } catch {
+    throw new Error(
+      res.ok
+        ? 'Sunucu geçersiz yanıt döndürdü'
+        : `API hatası (HTTP ${res.status}): ${text.slice(0, 120)}`
+    );
+  }
+
   if (!res.ok) {
-    const body = await res.json().catch(() => ({} as Record<string, unknown>));
-    const msg = typeof body?.error === 'string' ? body.error : `HTTP ${res.status}`;
+    const msg =
+      (typeof json.message === 'string' && json.message) ||
+      (typeof json.error === 'string' && json.error) ||
+      `HTTP ${res.status}`;
     throw new Error(msg);
   }
 
-  const json: ApiResponse<T> = await res.json();
   return json.data;
 }
 

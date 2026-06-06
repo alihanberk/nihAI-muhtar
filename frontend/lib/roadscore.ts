@@ -1,5 +1,7 @@
+import { getApiBaseUrl } from "./api-config";
+
 // RoadScore API client — communicates with Go backend RoadScore endpoints
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api/v1";
+const API_URL = getApiBaseUrl();
 
 export type DamageCategory = "GOOD" | "FAIR" | "POOR" | "CRITICAL";
 export type RouteType = "fastest" | "healthiest" | "balanced";

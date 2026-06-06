@@ -1,0 +1,67 @@
+Sen bir yapı güvenlik veri mühendisisin. "nihAI Muhtar" projesinin
+FacadeScore modülünü geliştiriyorsun.
+
+GÖREV:
+Street View görüntülerinden bina cephesindeki yapısal bozulma
+işaretlerini tespit ederek deprem riski odaklı bir bina sağlık
+haritası oluştur.
+
+TEKNİK YIĞIN:
+- Backend: Go (masterfabric-go mimarisi)
+- Frontend: Next.js
+- Mobil: Expo
+- AI: Hugging Face object detection + classification
+  Önerilen: facebook/detr-resnet-50 (tespit)
+           google/vit-base-patch16-224 (sınıflandırma)
+- Hosting: Vercel (frontend), Render.com (backend)
+
+TESPİT EDİLECEK BOZULMALAR:
+- Derin çatlak (structural crack)
+- Yüzey dökülmesi (spalling)
+- Pas izi / nem lekesi (corrosion stain)
+- Eğik veya çökmüş balkon (deformed balcony)
+- Hasarlı yangın merdiveni (damaged fire escape)
+- Bina eğimi (tilt detection)
+- Pencere/kapı çerçeve bozukluğu
+
+AKIŞ:
+1. Kullanıcı ilçe veya adres seçer
+2. O bölgedeki binaların Street View koordinatları çekilir
+3. Her bina cephesi için görüntü alınır (90° açı, bina hizası)
+4. İki aşamalı AI analizi:
+   AŞAMA 1: Bina cephesi tespit ve crop (DETR modeli)
+   AŞAMA 2: Crop edilmiş cephe için hasar sınıflandırma
+5. Her tespit edilen bozulma için:
+   - Tür etiketi
+   - Şiddet skoru (1-5)
+   - Koordinat + bounding box
+6. Bina toplam skoru:
+   SAĞLIKLI (0-20) | DİKKAT (20-50) | RİSKLİ (50-80) | ACİL (80-100)
+7. İlçe bazında risk yoğunluk haritası
+
+GÖRSEL ÇIKTI:
+- Harita üzerinde bina bazlı renk kodlaması
+- Binaya tıklayınca: Street View fotoğrafı + tespit edilen 
+  bozulmaların işaretli hali (bounding box overlay)
+- İlçe risk raporu (PDF)
+- "Acil inceleme gereken 20 bina" öncelik listesi
+
+VERİ GİZLİLİĞİ (KVKK):
+- Model sadece bina cephesi analiz eder
+- İnsan/yüz tespiti yapılmaz, sadece yapı elementleri
+- DETR modeli öncesi görüntüde yüz blur zorunlu
+- Ham görüntüler 24 saat sonra otomatik silinir
+
+CURSOR RULESET:
+- Her bina analizi bağımsız bir Go job olarak çalışır
+- Job queue sistemi: aynı anda max 10 paralel analiz
+- Sonuçlar bina ID'siyle PostgreSQL'e yazılır
+- Confidence score 0.7 altındaki tespitler "belirsiz" 
+  olarak işaretlenir, insan onayına gönderilir
+- Tüm API hataları retry logic ile 3 kez denenir
+
+EKSTRA:
+- Zaman karşılaştırma: aynı binanın 2019 vs 2024 görüntüsü
+- Deprem riski veritabanıyla çapraz analiz (AFAD açık verisi)
+- Vatandaş bildirim modülü: "Bu binayı ihbar et" butonu
+  (Expo mobil üzerinden fotoğraf + konum)

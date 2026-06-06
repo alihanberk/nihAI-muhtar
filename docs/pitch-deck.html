@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>nihAI Muhtar — Pitch Deck</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --green:   #10b981;
+    --blue:    #3b82f6;
+    --purple:  #8b5cf6;
+    --orange:  #f59e0b;
+    --red:     #ef4444;
+    --dark:    #0f172a;
+    --mid:     #1e293b;
+    --card:    #1e293b;
+    --border:  #334155;
+    --text:    #f1f5f9;
+    --muted:   #94a3b8;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--dark);
+    color: var(--text);
+    font-size: 14px;
+  }
+
+  /* ───── SLIDE SHELL ───── */
+  .slide {
+    width: 297mm;
+    min-height: 190mm;
+    background: var(--dark);
+    display: flex;
+    flex-direction: column;
+    padding: 40px 48px;
+    page-break-after: always;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .slide:last-child { page-break-after: auto; }
+
+  /* ───── DECORATIVE ORBS ───── */
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.12;
+    pointer-events: none;
+  }
+
+  /* ───── HEADER BAR ───── */
+  .slide-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+  }
+
+  .logo-mark {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  .logo-mark .ni { color: var(--green); }
+  .logo-mark .hAI { color: var(--blue); }
+
+  .slide-number {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* ───── BADGES ───── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .badge-green  { background: rgba(16,185,129,.15); color: var(--green); border: 1px solid rgba(16,185,129,.3); }
+  .badge-blue   { background: rgba(59,130,246,.15); color: var(--blue);  border: 1px solid rgba(59,130,246,.3); }
+  .badge-purple { background: rgba(139,92,246,.15); color: var(--purple);border: 1px solid rgba(139,92,246,.3); }
+  .badge-orange { background: rgba(245,158,11,.15); color: var(--orange);border: 1px solid rgba(245,158,11,.3); }
+  .badge-red    { background: rgba(239,68,68,.15);  color: var(--red);   border: 1px solid rgba(239,68,68,.3); }
+
+  /* ───── TYPOGRAPHY ───── */
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 10px;
+  }
+  h1 { font-size: 48px; font-weight: 900; line-height: 1.05; letter-spacing: -1.5px; }
+  h2 { font-size: 32px; font-weight: 800; letter-spacing: -0.8px; line-height: 1.2; }
+  h3 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+  h4 { font-size: 14px; font-weight: 600; }
+  p, li { color: var(--muted); line-height: 1.65; }
+  .highlight { color: var(--text); }
+  .accent-green  { color: var(--green); }
+  .accent-blue   { color: var(--blue);  }
+  .accent-purple { color: var(--purple);}
+  .accent-orange { color: var(--orange);}
+
+  /* ───── CARDS ───── */
+  .card {
+    background: rgba(30,41,59,.7);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 24px;
+    backdrop-filter: blur(10px);
+  }
+
+  .card-accent-green  { border-left: 3px solid var(--green); }
+  .card-accent-blue   { border-left: 3px solid var(--blue);  }
+  .card-accent-purple { border-left: 3px solid var(--purple);}
+  .card-accent-orange { border-left: 3px solid var(--orange);}
+  .card-accent-red    { border-left: 3px solid var(--red);   }
+
+  /* ───── GRIDS ───── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+
+  /* ───── STAT BOX ───── */
+  .stat { text-align: center; }
+  .stat-value { font-size: 38px; font-weight: 900; line-height: 1; letter-spacing: -1px; }
+  .stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* ───── STEP / FLOW ───── */
+  .flow { display: flex; align-items: stretch; gap: 0; }
+  .flow-step {
+    flex: 1;
+    background: rgba(30,41,59,.7);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    position: relative;
+    text-align: center;
+  }
+  .flow-arrow {
+    display: flex;
+    align-items: center;
+    color: var(--muted);
+    font-size: 18px;
+    padding: 0 6px;
+  }
+  .step-num {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  /* ───── TABLE ───── */
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    background: rgba(59,130,246,.1);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--blue);
+    text-align: left;
+  }
+  td {
+    border: 1px solid var(--border);
+    padding: 9px 14px;
+    font-size: 12px;
+    color: var(--muted);
+    vertical-align: middle;
+  }
+  tr:nth-child(even) td { background: rgba(255,255,255,.02); }
+
+  /* ───── DIVIDER ───── */
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+  /* ───── ICON BOX ───── */
+  .icon-box {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+  }
+  .icon-box-green  { background: rgba(16,185,129,.15); }
+  .icon-box-blue   { background: rgba(59,130,246,.15); }
+  .icon-box-purple { background: rgba(139,92,246,.15); }
+  .icon-box-orange { background: rgba(245,158,11,.15); }
+
+  /* ───── PILL LIST ───── */
+  .pill-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .pill {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(255,255,255,.07);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  /* ───── PROGRESS BAR ───── */
+  .progress-bar {
+    height: 6px;
+    background: rgba(255,255,255,.1);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+  .progress-fill { height: 100%; border-radius: 3px; }
+
+  /* ───── RISK CHIP ───── */
+  .risk-chip {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  /* ───── COVER SLIDE ───── */
+  .cover-bg {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(16,185,129,.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(59,130,246,.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 80%, rgba(139,92,246,.06) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  /* ───── PRINT ───── */
+  @media print {
+    body { background: var(--dark) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .slide { page-break-after: always; page-break-inside: avoid; }
+  }
+
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SLIDE 1 — COVER
+═══════════════════════════════════════════════════════════ -->
+<div class="slide" style="justify-content:center; min-height:210mm;">
+  <div class="cover-bg"></div>
+  <div class="orb" style="width:400px;height:400px;background:var(--green);top:-100px;left:-100px;"></div>
+  <div class="orb" style="width:350px;height:350px;background:var(--blue);bottom:-80px;right:-80px;"></div>
+
+  <div class="slide-header">
+    <div class="logo-mark"><span class="ni">nih</span><span class="hAI">AI</span> Muhtar</div>
+    <span class="badge badge-green">🏆 Cursor Hackathon · 6 Haziran 2026</span>
+  </div>
+
+  <div style="flex:1; display:flex; flex-direction:column; justify-content:center; max-width:640px;">
+    <div class="eyebrow">Urban Intelligence Platform</div>
+    <h1 style="margin-bottom:20px;">
+      Şehirlerinizi<br>
+      <span class="accent-green">Görmesini</span> Öğretin
+    </h1>
+    <p style="font-size:17px; max-width:520px; line-height:1.7; color:#cbd5e1;">
+      Street View verisi + Agentic AI ile yol hasarı, bina riski ve ısı adası sorunlarını
+      ölçen; belediyeler için karar destek sistemi.
+    </p>
+
+    <div style="margin-top:32px; display:flex; gap:12px; flex-wrap:wrap;">
+      <span class="badge badge-green">🛣️ RoadScore</span>
+      <span class="badge badge-blue">🌿 AirLens</span>
+      <span class="badge badge-purple">🏛️ FacadeScore</span>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:32px; margin-top:40px; padding-top:24px; border-top:1px solid var(--border);">
+    <div class="stat">
+      <div class="stat-value accent-green">3</div>
+      <div class="stat-label">AI Modül</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value accent-blue">10K</div>
+      <div class="stat-label">Street View Kota</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value accent-purple">Real-time</div>
+      <div class="stat-label">Hasar Analizi</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value accent-orange">KVKK</div>
+      <div class="stat-label">Tam Uyumlu</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SLIDE 2 — PROBLEM
+═══════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="orb" style="width:300px;height:300px;background:var(--red);top:-50px;right:0;"></div>
+  <div class="slide-header">
+    <div class="logo-mark"><span class="ni">nih</span><span class="hAI">AI</span> Muhtar</div>
+    <span class="slide-number">Problem · 02 / 10</span>
+  </div>
+
+  <div class="eyebrow">The Problem We Solve</div>
+  <h2 style="margin-bottom:28px;">Şehirler Kör Uçuyor</h2>
+
+  <div class="grid-3" style="margin-bottom:20px;">
+    <div class="card card-accent-red">
+      <div class="icon-box icon-box-green" style="background:rgba(239,68,68,.15);">🛣️</div>
+      <h4 style="color:var(--red); margin-bottom:8px;">Yol Hasarı</h4>
+      <p style="font-size:13px;">Türkiye'de yol bakım maliyetleri yıllık <strong class="highlight">₺40 milyarı</strong> aşıyor. Hasar tespiti hâlâ şikâyet bazlı, reaktif.</p>
+    </div>
+    <div class="card card-accent-orange">
+      <div class="icon-box" style="background:rgba(245,158,11,.15);">🌡️</div>
+      <h4 style="color:var(--orange); margin-bottom:8px;">Isı Adası</h4>
+      <p style="font-size:13px;">İstanbul'da beton/yeşil alan oranı kritik seviyelerde. <strong class="highlight">2050'ye kadar</strong> kentsel ısı adası %30 büyüyecek.</p>
+    </div>
+    <div class="card card-accent-purple">
+      <div class="icon-box" style="background:rgba(139,92,246,.15);">🏛️</div>
+      <h4 style="color:var(--purple); margin-bottom:8px;">Bina Riski</h4>
+      <p style="font-size:13px;">Türkiye'deki binaların <strong class="highlight">%65'i</strong> deprem yönetmeliği öncesi yapılmış. Cephe hasarı sistematik izlenemiyor.</p>
+    </div>
+  </div>
+
+  <div class="card" style="background:rgba(239,68,68,.06); border-color:rgba(239,68,68,.3);">
+    <div style="display:flex; align-items:center; gap:16px;">
+      <div style="font-size:32px;">⚠️</div>
+      <div>
+        <h4 style="color:var(--text); margin-bottom:4px;">Ortak Sorun: Veri Körlüğü</h4>
+        <p style="font-size:13px;">Belediyeler şehrin fiziksel durumunu <strong class="highlight">anlık, ölçeklenebilir ve nesnel biçimde</strong> izleyecek araca sahip değil. Kararlar eksik veriyle alınıyor, bütçeler heba ediliyor.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SLIDE 3 — SOLUTION
+═══════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="orb" style="width:350px;height:350px;background:var(--green);bottom:-100px;left:-50px;"></div>
+  <div class="slide-header">
+    <div class="logo-mark"><span class="ni">nih</span><span class="hAI">AI</span> Muhtar</div>
+    <span class="slide-number">Solution · 03 / 10</span>
+  </div>
+
+  <div class="eyebrow">Our Solution</div>
+  <h2 style="margin-bottom:8px;">Dijital Muhtarın Gözleri</h2>
+  <p style="margin-bottom:28px; max-width:560px;">Street View + Hugging Face AI = Şehrin nabzını gerçek zamanlı ölçen kentsel zeka platformu.</p>
+
+  <div class="grid-3" style="gap:16px;">
+    <div class="card card-accent-green">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+        <div style="font-size:28px;">🛣️</div>
+        <div>
+          <div style="font-size:10px; color:var(--green); font-weight:700; letter-spacing:1px; text-transform:uppercase;">Modül 1</div>
+          <h3 style="color:var(--green);">RoadScore</h3>
+        </div>
+      </div>
+      <p style="font-size:12px; margin-bottom:10px;">A→B güzergahında yol hasar skoru. 150m'de bir Street View çekimi + AI sınıflandırma.</p>
+      <div class="pill-list">
+        <span class="pill">GOOD</span>
+        <span class="pill">FAIR</span>
+        <span class="pill">POOR</span>
+        <span class="pill">CRITICAL</span>
+      </div>
+    </div>
+
+    <div class="card card-accent-blue">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+        <div style="font-size:28px;">🌿</div>
+        <div>
+          <div style="font-size:10px; color:var(--blue); font-weight:700; letter-spacing:1px; text-transform:uppercase;">Modül 2</div>
+          <h3 style="color:var(--blue);">AirLens</h3>
+        </div>
+      </div>
+      <p style="font-size:12px; margin-bottom:10px;">Semantik segmentasyon ile yeşillik/beton oranı hesabı. İlçe bazında ısı adası risk haritası.</p>
+      <div class="pill-list">
+        <span class="pill">Vegetation %</span>
+        <span class="pill">Serin Rota</span>
+        <span class="pill">Isı Riski</span>
+      </div>
+    </div>
+
+    <div class="card card-accent-purple">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+        <div style="font-size:28px;">🏛️</div>
+        <div>
+          <div style="font-size:10px; color:var(--purple); font-weight:700; letter-spacing:1px; text-transform:uppercase;">Modül 3</div>
+          <h3 style="color:var(--purple);">FacadeScore</h3>
+        </div>
+      </div>
+      <p style="font-size:12px; margin-bottom:10px;">Bina cephesi çatlak/hasar tespiti. İki aşamalı AI: DETR tespiti + ViT sınıflandırma.</p>
+      <div class="pill-list">
+        <span class="pill">Çatlak</span>
+        <span class="pill">Dökülme</span>
+        <span class="pill">Eğilme</span>
+        <span class="pill">Paslanma</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div style="display:flex; align-items:center; gap:12px;">
+    <div class="badge badge-green">✅ KVKK Tam Uyumlu</div>
+    <div class="badge badge-blue">🔒 Yüz & Plaka Blur</div>
+    <div class="badge badge-purple">🗑️ Ham Görüntü Otomatik Silme</div>
+    <div class="badge badge-orange">📍 Sadece Koordinat + Skor Saklama</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SLIDE 4 — ROADSCORE DEEP-DIVE
+═══════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="logo-mark"><span class="ni">nih</span><span class="hAI">AI</span> Muhtar</div>
+    <span class="slide-number">RoadScore · 04 / 10</span>
+  </div>
+
+  <div style="display:flex; gap:24px;">
+    <div style="flex:1;">
+      <span class="badge badge-green" style="margin-bottom:12px; display:inline-flex;">🛣️ RoadScore</span>
+      <h2 style="margin-bottom:8px;">Akıllı Rota Puanlama</h2>
+      <p style="font-size:13px; margin-bottom:20px;">3 alternatif rota arasında sadece mesafe değil, <strong class="highlight">yol kalitesi</strong> bazlı karşılaştırma.</p>
+
+      <div class="flow" style="margin-bottom:20px; gap:4px;">
+        <div class="flow-step" style="font-size:11px;">
+          <div class="step-num" style="background:rgba(16,185,129,.2); color:var(--green);">1</div>
+          <div style="color:var(--text); font-weight:600;">A → B</div>
+          <div style="color:var(--muted); font-size:10px;">Rota Seçimi</div>
+        </div>
+        <div class="flow-arrow">›</div>
+        <div class="flow-step" style="font-size:11px;">
+          <div class="step-num" style="background:rgba(16,185,129,.2); color:var(--green);">2</div>
+          <div style="color:var(--text); font-weight:600;">3 Rota</div>
+          <div style="color:var(--muted); font-size:10px;">Directions API</div>
+        </div>
+        <div class="flow-arrow">›</div>
+        <div class="flow-step" style="font-size:11px;">
+          <div class="step-num" style="background:rgba(16,185,129,.2); color:var(--green);">3</div>
+          <div style="color:var(--text); font-weight:600;">150m/Nokta</div>
+          <div style="color:var(--muted); font-size:10px;">Street View</div>
+        </div>
+        <div class="flow-arrow">›</div>
+        <div class="flow-step" style="font-size:11px;">
+          <div class="step-num" style="background:rgba(16,185,129,.2); color:var(--green);">4</div>
+          <div style="color:var(--text); font-weight:600;">HF Model</div>
+          <div style="color:var(--muted); font-size:10px;">AI Analiz</div>
+        </div>
+        <div class="flow-arrow">›</div>
+        <div class="flow-step" style="font-size:11px;">
+          <div class="step-num" style="background:rgba(16,185,129,.2); color:var(--green);">5</div>
+          <div style="color:var(--text); font-weight:600;">Skor Haritası</div>
+          <div style="color:var(--muted); font-size:10px;">Görselleştirme</div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:16px 20px;">
+        <h4 style="margin-bottom:12px; color:var(--text);">Hasar Kategorileri</h4>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div>
+            <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:3px;">
+              <span style="color:#10b981; font-weight:600;">● GOOD</span><span style="color:var(--muted);">0–25% hasar</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:25%;background:var(--green);"></div></div>
+          </div>
+          <div>
+            <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:3px;">
+              <span style="color:#f59e0b; font-weight:600;">● FAIR</span><span style="color:var(--muted);">25–50% hasar</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:50%;background:var(--orange);"></div></div>
+          </div>
+          <div>
+            <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:3px;">
+              <span style="color:#f97316; font-weight:600;">● POOR</span><span style="color:var(--muted);">50–75% hasar</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:75%;background:#f97316;"></div></div>
+          </div>
+          <div>
+            <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:3px;">
+              <span style="color:#ef4444; font-weight:600;">● CRITICAL</span><span style="color:var(--muted);">75–100% hasar</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--red);"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex:1; display:flex; flex-direction:column; gap:14px;">
+      <div class="card card-accent-green">
+        <h4 style="margin-bottom:10px; color:var(--text);">Rota Karşılaştırma Kartları</h4>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
+          <div style="text-align:center; background:rgba(16,185,129,.08); border-radius:8px; padding:10px;">
+            <div style="font-size:16px; font-weight:800; color:var(--green);">12dk</div>
+            <div style="font-size:10px; color:var(--muted);">En Hızlı</div>
+            <div style="font-size:10px; color:var(--orange); margin-top:4px;">%42 hasar</div>
+          </div>
+          <div style="text-align:center; background:rgba(59,130,246,.08); border-radius:8px; padding:10px; border:1px solid rgba(59,130,246,.3);">
+            <div style="font-size:16px; font-weight:800; color:var(--blue);">18dk</div>
+            <div style="font-size:10px; color:var(--muted);">En Sağlam</div>
+            <div style="font-size:10px; color:var(--green); margin-top:4px;">%8 hasar</div>
+          </div>
+          <div style="text-align:center; background:rgba(139,92,246,.08); border-radius:8px; padding:10px;">
+            <div style="font-size:16px; font-weight:800; color:var(--purple);">15dk</div>
+            <div style="font-size:10px; color:var(--muted);">Denge</div>
+            <div style="font-size:10px; color:var(--green); margin-top:4px;">%21 hasar</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h4 style="margin-bottom:10px; color:var(--text);">Teknik Mimari</h4>
+        <table style="font-size:11px;">
+          <tr><td style="color:var(--green); font-weight:600;">API Kota</td><td>Redis cache, 500m içinde hit → direkt dön</td></tr>
+          <tr><td style="color:var(--green); font-weight:600;">Depolama</td><td>PostGIS koordinat + hasar skoru</td></tr>
+          <tr><td style="color:var(--green); font-weight:600;">Rate Limit</td><td>Her Street View isteği middleware'den geçer</td></tr>
+          <tr><td style="color:var(--green); font-weight:600;">HF Timeout</td><td>10 saniye hard limit</td></tr>
+          <tr><td style="color:var(--green); font-weight:600;">Çıktı</td><td>PDF rapor (belediye için)</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SLIDE 5 — AIRLENS + FACADESCORE
+═══════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="logo-mark"><span class="ni">nih</span><span class="hAI">AI</span> Muhtar</div>
+    <span class="slide-number">AirLens &amp; FacadeScore · 05 / 10</span>
+  </div>
+
+  <div class="grid-2" style="gap:20px;">
+    <!-- AIRLENS -->
+    <div style="display:flex; flex-direction:column; gap:14px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:24px;">🌿</span>
+        <div>
+          <div style="font-size:10px; color:var(--blue); font-weight:700; letter-spacing:1px; text-transform:uppercase;">AirLens</div>
+          <h3>Yeşillik & Isı Adası Haritası</h3>
+        </div>
+      </div>
+
+      <div class="card card-accent-blue" style="padding:14px 18px;">
+        <div style="font-size:11px; color:var(--muted); margin-bottom:8px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase;">Segmentasyon Modeli</div>
+        <div style="font-size:12px; color:var(--text); font-weight:600; margin-bottom:4px;">nvidia/segformer-b0-finetuned-ade-512-512</div>
+        <p style="font-size:11px;">4 yön panorama (0°, 90°, 180°, 270°) → piksel sınıflandırma</p>
+      </div>
+
+      <div class="card" style="padding:14px 18px;">
+        <div style="font-size:11px; font-weight:700; color:var(--text); margin-bottom:10px;">Piksel Sınıfları</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+          <span style="background:rgba(16,185,129,.2); color:var(--green); padding:3px 8px; border-radius:4px; font-size:11px; font-weight:600;">🌳 Vegetation</span>
+          <span style="background:rgba(59,130,246,.2); color:var(--blue); padding:3px 8px; border-radius:4px; font-size:11px; font-weight:600;">☁️ Sky</span>
+          <span style="background:rgba(100,116,139,.2); color:#94a3b8; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:600;">🏢 Building</span>
+          <span style="background:rgba(71,85,105,.2); color:#94a3b8; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:600;">🛣️ Road</span>
+          <span style="background:rgba(71,85,105,.2); color:#94a3b8; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:600;">🚶 Sidewalk</span>
+        </div>
+      </div>
+
+      <div class="card" style="padding:12px 16px; font-size:12px;">
+        <div style="font-size:11px; font-weight:700; color:var(--blue); margin-bottom:8px;">Green Coverage Score</div>
+        <div style="background:rgba(0,0,0,.3); border-radius:8px; padding:8px 12px; font-family:monospace; font-size:12px; color:var(--green);">
+          GCS = (vegetation_px / total_px) × 100<br>
+          <span style="color:var(--muted);">// 4 yönün ortalaması = nokta skoru</span>
+        </div>
+      </div>
+
+      <div class="card" style="padding:12px 16px; background:rgba(59,130,246,.05);">
+        <div style="font-size:11px; font-weight:600; color:var(--muted); margin-bottom:6px;">Çıktılar</div>
+        <div style="display:flex; flex-direction:column; gap:4px; font-size:12px;">
+          <div>🗺️ <span class="highlight">Choropleth harita</span> — yeşil → kırmızı gradyan</div>
+          <div>🏆 <span class="highlight">En serin 10 sokak</span> listesi</div>
+          <div>🚨 <span class="highlight">Acil ağaçlandırma gereken 10 nokta</span></div>
+          <div>🌿 <span class="highlight">Serin yürüyüş rotası</span> navigasyonu</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FACADESCORE -->
+    <div style="display:flex; flex-direction:column; gap:14px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:24px;">🏛️</span>
+        <div>
+          <div style="font-size:10px; color:var(--purple); font-weight:700; letter-spacing:1px; text-transform:uppercase;">FacadeScore</div>
+          <h3>Bina Cephesi Risk Analizi</h3>
+        </div>
+      </div>
+
+      <div class="card card-accent-purple" style="padding:14px 18px;">
+        <div style="font-size:11px; color:var(--muted); margin-bottom:8px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase;">2 Aşamalı AI Pipeline</div>
+        <div style="display:flex; flex-direction:column; gap:6px; font-size:12px;">
+          <div style="display:flex; gap:10px; align-items:center;">
+            <span style="background:rgba(139,92,246,.2); color:var(--purple); padding:2px 8px; border-radius:4px; font-size:10px; font-weight:700;">AŞAMA 1</span>
+            <span class="highlight">facebook/detr-resnet-50</span>
+            <span style="color:var(--muted);">Tespit + Crop</span>
+          </div>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <span style="background:rgba(139,92,246,.2); color:var(--purple); padding:2px 8px; border-radius:4px; font-size:10px; font-weight:700;">AŞAMA 2</span>
+            <span class="highlight">google/vit-base-patch16-224</span>
+            <span style="color:var(--muted);">Hasar Sınıflandırma</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:14px 18px;">
+        <div style="font-size:11px; font-weight:700; color:var(--text); margin-bottom:10px;">Tespit Edilen Bozulmalar</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; font-size:12px;">
+          <div>🔴 Derin çatlak (structural crack)</div>
+          <div>🟠 Yüzey dökülmesi (spalling)</div>
+          <div>🟡 Pas / nem lekesi (corrosion)</div>
+          <div>🔴 Eğik balkon</div>
+          <div>🟠 Hasarlı yangın merdiveni</div>
+          <div>🔴 Bina eğimi (tilt)</div>
+          <div>🟡 Pencere/kapı bozukluğu</div>
+          <div>🟠 Confidence &lt;0.7 → insan onayı</div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:12px 16px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12px;">
+          <div style="text-align:center; background:rgba(16,185,129,.08); border-radius:8px; padding:8px;">
+            <div style="color:var(--green); font-weight:700;">SAĞLIKLI</div>
+            <div style="color:var(--muted); font-size:10px;">0–20 puan</div>
+          </div>
+          <div style="text-align:center; background:rgba(245,158,11,.08); border-radius:8px; padding:8px;">
+            <div style="color:var(--orange); font-weight:700;">DİKKAT</div>
+            <div style="color:var(--muted); font-size:10px;">20–50 puan</div>
+          </div>
+          <div style="text-align:center; background:rgba(239,68,68,.08); border-radius:8px; padding:8px;">
+            <div style="color:#f97316; font-weight:700;">RİSKLİ</div>
+            <div style="color:var(--muted); font-size:10px;">50–80 puan</div>
+          </div>
+          <div style="text-align:center; background:rgba(239,68,68,.15); border-radius:8px; padding:8px; border:1px solid rgba(239,68,68,.3);">
+            <div style="color:var(--red); font-weight:700;">ACİL</div>
+            <div style="color:var(--muted); font-size:10px;">80–100 puan</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SLIDE 6 — AGENTIC AI DEVELOPMENT (KEY SLIDE)
+═══════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="orb" style="width:400px;height:400px;background:var(--purple);top:-100px;right:-100px;"></div>
+  <div class="orb" style="width:300px;height:300px;background:var(--blue);bottom:-50px;left:0;"></div>
+  <div class="slide-header">
+    <div class="logo-mark"><span class="ni">nih</span><span class="hAI">AI</span> Muhtar</div>
+    <span class="slide-number">Agentic AI Dev · 06 / 10</span>
+  </div>
+
+  <div class="eyebrow">How We Built It</div>
+  <h2 style="margin-bottom:6px;">Agentic AI ile Hızlandırılmış Geliştirme</h2>
+  <p style="margin-bottom:22px; max-width:600px;">Cursor IDE ekosistemi, her adımda kodu <strong class="highlight">bağlamı anlayan bir agent</strong> olarak yazdı. Biz mimari kararlar aldık; AI uyguladı.</p>
+
+  <div class="grid-2" style="gap:16px; margin-bottom:16px;">
+    <!-- LEFT: Cursor Ruleset -->
+    <div>
+      <div class="card card-accent-purple" style="margin-bottom:12px;">
+        <div style="display:flex; align-items:flex-start; gap:12px;">
+          <div style="font-size:26px; margin-top:2px;">📐</div>
+          <div>
+            <h4 style="color:var(--purple); margin-bottom:6px;">Cursor Ruleset (AGENTS.md)</h4>
+            <p style="font-size:12px; margin-bottom:10px;">Her modül için ayrı ruleset tanımlandı. Agent, kod yazarken bu kısıtları otomatik uygulayarak Clean Architecture'ı korudu.</p>
+            <div style="background:rgba(0,0,0,.4); border-radius:8px; padding:10px; font-family:monospace; font-size:11px; line-height:1.7; color:#a5f3c8;">
+              # RoadScore Ruleset<br>
+              <span style="color:var(--muted);">- Handlers → /internal/handlers</span><br>
+              <span style="color:var(--muted);">- HF timeout: 10s hard limit</span><br>
+              <span style="color:var(--muted);">- Rate limit middleware: zorunlu</span><br>
+              <span style="color:var(--muted);">- Coords: PostGIS formatı</span><br>
+              <span style="color:var(--muted);">- Error wrap: fmt.Errorf("%w")</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card card-accent-blue">
+        <div style="display:flex; align-items:flex-start; gap:12px;">
+          <div style="font-size:26px; margin-top:2px;">🔁</div>
+          <div>
+            <h4 style="color:var(--blue); margin-bottom:6px;">Cursor CLI & SDK Entegrasyonu</h4>
+            <p style="font-size:12px; margin-bottom:8px;">Tekrarlayan Go boilerplate üretimi, API handler iskeletleri ve test senaryoları Cursor CLI komutlarıyla otomatize edildi.</p>
+            <div style="background:rgba(0,0,0,.4); border-radius:8px; padding:10px; font-family:monospace; font-size:11px; color:#93c5fd; line-height:1.6;">
+              # Handler iskelet üretimi<br>
+              cursor run generate-handler \<br>
+              &nbsp;&nbsp;--module roadscore \<br>
+              &nbsp;&nbsp;--pattern clean-arch<br><br>
+              <span style="color:var(--muted);"># SDK ile otomatik entegrasyon testi</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Agent Workflow -->
+    <div style="display:flex; flex-direction:column; gap:12px;">
+      <div class="card" style="padding:16px 20px;">
+        <h4 style="color:var(--text); margin-bottom:14px;">🤖 Agent Çalışma Döngüsü</h4>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; gap:10px; align-items:flex-start;">
+            <div style="width:28px; height:28px; border-radius:50%; background:rgba(139,92,246,.2); border:1px solid rgba(139,92,246,.4); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--purple); flex-shrink:0;">1</div>
+            <div style="font-size:12px;"><span class="highlight">Mimari Prompt</span> — "Go handler yaz, masterfabric-go Clean Architecture + bu ruleset" → Agent tüm layer'ları oluşturdu</div>
+          </div>
+          <div style="display:flex; gap:10px; align-items:flex-start;">
+            <div style="width:28px; height:28px; border-radius:50%; background:rgba(139,92,246,.2); border:1px solid rgba(139,92,246,.4); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--purple); flex-shrink:0;">2</div>
+            <div style="font-size:12px;"><span class="highlight">Compose Mode</span> — HF API entegrasyonu + retry logic + timeout → tek promptta çalışan pipeline</div>
+          </div>
+          <div style="display:flex; gap:10px; align-items:flex-start;">
+            <div style="width:28px; height:28px; border-radius:50%; background:rgba(139,92,246,.2); border:1px solid rgba(139,92,246,.4); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--purple); flex-shrink:0;">3</div>
+            <div style="font-size:12px;"><span class="highlight">Context Window</span> — Tüm codebase bağlamında KVKK kurallarını otomatik uygulayarak blur middleware ekledi</div>
+          </div>
+          <div style="display:flex; gap:10px; align-items:flex-start;">
+            <div style="width:28px; height:28px; border-radius:50%; background:rgba(139,92,246,.2); border:1px solid rgba(139,92,246,.4); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--purple); flex-shrink:0;">4</div>
+            <div style="font-size:12px;"><span class="highlight">Hata Döngüsü</span> — Linter hatası → Agent kendi düzeltti, commit önerdi, açıkladı</div>
+          </div>
+          <div style="display:flex; gap:10px; align-items:flex-start;">
+            <div style="width:28px; height:28px; border-radius:50%; background:rgba(139,92,246,.2); border:1px solid rgba(139,92,246,.4); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--purple); flex-shrink:0;">5</div>
+            <div style="font-size:12px;"><span class="highlight">Paralel Geliştirme</span> — 3 modül eş zamanlı; her modül için ayrı agent context penceresi</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:14px 18px; background:rgba(245,158,11,.05); border-color:rgba(245,158,11,.3);">
+        <h4 style="color:var(--orange); margin-bottom:10px;">⚡ Agentic Geliştirme Kazanımları</h4>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12px;">
+          <div>✅ <span class="highlight">%70 daha hızlı</span> boilerplate üretimi</div>
+          <div>✅ <span class="highlight">Sıfır mimari sapma</span> (ruleset koruması)</div>
+          <div>✅ <span class="highlight">Otomatik hata yakalama</span> &amp; düzeltme</div>
+          <div>✅ <span class="highlight">KVKK uyumu</span> kod seviyesinde enforce</div>
+          <div>✅ <span class="highlight">Anlamlı commit</span> mesajları otomatik</div>
+          <div>✅ <span class="highlight">README.md</span> otomatik dokümantasyon</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:10px;">
+    <div class="badge badge-purple">🤖 Cursor IDE</div>
+    <div class="badge badge-blue">📐 Ruleset Kurgusu</div>
+    <div class="badge badge-orange">⚡ Cursor CLI</div>
+    <div class="badge badge-green">🔗 Cursor SDK</div>
+    <div class="badge" style="background:rgba(255,255,255,.05); border:1px solid var(--border); color:var(--text);">📝 Anlamlı Commit Logları</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SLIDE 7 — TECH STACK
+═══════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="logo-mark"><span class="ni">nih</span><span class="hAI">AI</span> Muhtar</div>
+    <span class="slide-number">Tech Stack · 07 / 10</span>
+  </div>
+
+  <div class="eyebrow">Architecture</div>
+  <h2 style="margin-bottom:24px;">Kurallara Eksiksiz Uyum</h2>
+
+  <div class="grid-2" style="gap:20px; margin-bottom:20px;">
+    <div>
+      <table>
+        <thead>
+          <tr>
+            <th>Katman</th>
+            <th>Teknoloji</th>
+            <th>Durum</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="color:var(--text); font-weight:600;">Frontend Web</td>
+            <td>Next.js + Mapbox GL JS</td>
+            <td><span class="badge badge-green" style="font-size:10px;">✅ Uyumlu</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--text); font-weight:600;">Frontend Mobil</td>
+            <td>Expo (React Native)</td>
+            <td><span class="badge badge-green" style="font-size:10px;">✅ Uyumlu</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--text); font-weight:600;">Backend</td>
+            <td>Go — masterfabric-go mimarisi</td>
+            <td><span class="badge badge-green" style="font-size:10px;">✅ Uyumlu</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--text); font-weight:600;">AI / ML</td>
+            <td>Hugging Face Inference API</td>
+            <td><span class="badge badge-green" style="font-size:10px;">✅ Uyumlu</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--text); font-weight:600;">Harici Veri</td>
+            <td>Google Street View Static API</td>
+            <td><span class="badge badge-green" style="font-size:10px;">✅ Uyumlu</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--text); font-weight:600;">Hosting Web</td>
+            <td>Vercel</td>
+            <td><span class="badge badge-green" style="font-size:10px;">✅ Uyumlu</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--text); font-weight:600;">Hosting API</td>
+            <td>Render.com</td>
+            <td><span class="badge badge-green" style="font-size:10px;">✅ Uyumlu</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--text); font-weight:600;">Database</td>
+            <td>PostgreSQL + PostGIS</td>
+            <td><span class="badge badge-green" style="font-size:10px;">✅ Uyumlu</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--text); font-weight:600;">Cache</td>
+            <td>Redis (kota yönetimi)</td>
+            <td><span class="badge badge-green" style="font-size:10px;">✅ Uyumlu</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:14px;">
+      <div class="card card-accent-green">
+        <h4 style="margin-bottom:12px; color:var(--text);">masterfabric-go Clean Architecture</h4>
+        <div style="font-family:monospace; font-size:11px; line-height:1.8; color:#a5f3c8;">
+          <span style="color:var(--muted);">Domain →</span> models, interfaces, events<br>
+          <span style="color:var(--muted);">Application →</span> use cases, DTOs<br>
+          <span style="color:var(--muted);">Infrastructure →</span> HTTP, Postgres, Redis, HF<br>
+          <br>
+          /internal/handlers/ &nbsp; &nbsp; ← HTTP Layer<br>
+          /internal/usecase/ &nbsp; &nbsp; &nbsp; ← Business Logic<br>
+          /internal/repository/ &nbsp; ← Data Layer<br>
+          /internal/domain/ &nbsp; &nbsp; &nbsp; ← Core Models
+        </div>
+      </div>
+
+      <div class="card">
+        <h4 style="margin-bottom:10px; color:var(--text);">AI Modeller</h4>
+        <div style="display:flex; flex-direction:column; gap:8px; font-size:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="highlight">RoadScore</span>
+            <span style="color:var(--muted);">Hugging Face Classification</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="highlight">AirLens</span>
+            <span style="color:var(--muted);">segformer-b0-finetuned-ade-512</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="highlight">FacadeScore Tespit</span>
+            <span style="color:var(--muted);">facebook/detr-resnet-50</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="highlight">FacadeScore Sınıf.</span>
+            <span style="color:var(--muted);">google/vit-base-patch16-224</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="background:rgba(16,185,129,.05); border-color:rgba(16,185,129,.3);">
+        <h4 style="color:var(--green); margin-bottom:8px;">CI/CD & Git Disiplini</h4>
+        <p style="font-size:12px;">Anlamlı commit mesajları ile sürekli entegrasyon. Jüri commit loglarını izleyebilir. Tek seferlik yükleme yok.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SLIDE 8 — KVKK & PRIVACY
+═══════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="logo-mark"><span class="ni">nih</span><span class="hAI">AI</span> Muhtar</div>
+    <span class="slide-number">KVKK &amp; Privacy · 08 / 10</span>
+  </div>
+
+  <div class="eyebrow">Data Privacy</div>
+  <h2 style="margin-bottom:8px;">Toplumsal Fayda, Gizliliği İhlal Etmeden</h2>
+  <p style="margin-bottom:24px; max-width:580px;">Gizlilik sadece yasal zorunluluk değil, tasarım kararıdır. Her pipeline adımında anonimlik güvence altında.</p>
+
+  <div class="grid-3" style="gap:14px; margin-bottom:20px;">
+    <div class="card" style="text-align:center; padding:24px 16px;">
+      <div style="font-size:36px; margin-bottom:12px;">🙈</div>
+      <h4 style="margin-bottom:8px;">Yüz & Plaka Blur</h4>
+      <p style="font-size:12px;">Model çalıştırılmadan önce tüm insan yüzleri ve araç plakaları <strong class="highlight">geri döndürülemez</strong> şekilde bulanıklaştırılır.</p>
+    </div>
+    <div class="card" style="text-align:center; padding:24px 16px;">
+      <div style="font-size:36px; margin-bottom:12px;">🏗️</div>
+      <h4 style="margin-bottom:8px;">Sadece Yapılar</h4>
+      <p style="font-size:12px;">Modeller yalnızca cansız kentsel objeler hedef alır: yol, bina cephesi, bitki örtüsü. Kimlik tespiti kesinlikle yoktur.</p>
+    </div>
+    <div class="card" style="text-align:center; padding:24px 16px;">
+      <div style="font-size:36px; margin-bottom:12px;">🗑️</div>
+      <h4 style="margin-bottom:8px;">Otomatik Silme</h4>
+      <p style="font-size:12px;">Ham görüntüler işlem sonrası silinir. FacadeScore için <strong class="highlight">24 saat</strong> sonra otomatik imha. Sadece koordinat + skor saklanır.</p>
+    </div>
+  </div>
+
+  <div class="grid-2" style="gap:14px;">
+    <div class="card" style="background:rgba(16,185,129,.05); border-color:rgba(16,185,129,.3);">
+      <h4 style="color:var(--green); margin-bottom:12px;">✅ Yapılan</h4>
+      <div style="display:flex; flex-direction:column; gap:6px; font-size:12px;">
+        <div>✅ Yüz blur (geri döndürülemez, işlem öncesi)</div>
+        <div>✅ Plaka blur (geri döndürülemez, işlem öncesi)</div>
+        <div>✅ Koordinat + skor depolama (sadece)</div>
+        <div>✅ Ham görüntü imhası (hackathon sonu belgeleme)</div>
+        <div>✅ Sadece cansız obje sınıflandırma</div>
+        <div>✅ PostGIS — coğrafi veri, kişisel değil</div>
+      </div>
+    </div>
+    <div class="card" style="background:rgba(239,68,68,.05); border-color:rgba(239,68,68,.3);">
+      <h4 style="color:var(--red); margin-bottom:12px;">🚫 Kesinlikle Yapılmayan</h4>
+      <div style="display:flex; flex-direction:column; gap:6px; font-size:12px;">
+        <div>🚫 Kimlik tespiti veya yüz tanıma</div>
+        <div>🚫 Plaka okuma / araç profilleme</div>
+        <div>🚫 Kişi takibi veya profilleme</div>
+        <div>🚫 Ham görüntü uzun süreli depolama</div>
+        <div>🚫 Kişisel veri modelden geçirme</div>
+        <div>🚫 KVKK'ya aykırı veri paylaşımı</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SLIDE 9 — MARKET & IMPACT
+═══════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="orb" style="width:350px;height:350px;background:var(--green);bottom:-80px;right:-80px;"></div>
+  <div class="slide-header">
+    <div class="logo-mark"><span class="ni">nih</span><span class="hAI">AI</span> Muhtar</div>
+    <span class="slide-number">Market &amp; Impact · 09 / 10</span>
+  </div>
+
+  <div class="eyebrow">Opportunity</div>
+  <h2 style="margin-bottom:24px;">Kime Satıyoruz, Neden Önemli?</h2>
+
+  <div class="grid-3" style="gap:14px; margin-bottom:20px;">
+    <div class="card card-accent-green">
+      <div class="icon-box icon-box-green">🏛️</div>
+      <h4 style="margin-bottom:6px;">Belediyeler</h4>
+      <p style="font-size:12px; margin-bottom:10px;">Yol bakım bütçesi optimizasyonu, deprem riski önceliklendirme, ısı adası müdahale planlaması.</p>
+      <div class="pill-list">
+        <span class="pill">İstanbul</span>
+        <span class="pill">Ankara</span>
+        <span class="pill">İzmir</span>
+        <span class="pill">+78 il</span>
+      </div>
+    </div>
+    <div class="card card-accent-blue">
+      <div class="icon-box icon-box-blue">🏗️</div>
+      <h4 style="margin-bottom:6px;">İnşaat & Sigorta</h4>
+      <p style="font-size:12px; margin-bottom:10px;">FacadeScore verisini deprem sigortası riskskoru olarak kullanan şirketler. Bina sertifikasyon hizmetleri.</p>
+      <div class="pill-list">
+        <span class="pill">DASK</span>
+        <span class="pill">Belediye</span>
+        <span class="pill">Müteahhit</span>
+      </div>
+    </div>
+    <div class="card card-accent-purple">
+      <div class="icon-box icon-box-purple">🌿</div>
+      <h4 style="margin-bottom:6px;">Çevre & Planlama</h4>
+      <p style="font-size:12px; margin-bottom:10px;">AirLens verisiyle yeşillendirme planı yapan şehir plancıları ve çevre bakanlığı birimleri.</p>
+      <div class="pill-list">
+        <span class="pill">Çevre Bak.</span>
+        <span class="pill">İBB</span>
+        <span class="pill">Üniversite</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="gap:16px;">
+    <div class="card">
+      <h4 style="margin-bottom:14px; color:var(--text);">Türkiye Kentsel Veri Pazarı</h4>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; text-align:center;">
+        <div>
+          <div class="stat-value accent-green" style="font-size:28px;">₺40B</div>
+          <div class="stat-label">Yıllık yol bakım harcaması</div>
+        </div>
+        <div>
+          <div class="stat-value accent-orange" style="font-size:28px;">%65</div>
+          <div class="stat-label">Deprem yönetmeliği öncesi bina</div>
+        </div>
+        <div>
+          <div class="stat-value accent-blue" style="font-size:28px;">81</div>
+          <div class="stat-label">İl, potansiyel müşteri</div>
+        </div>
+        <div>
+          <div class="stat-value accent-purple" style="font-size:28px;">10K+</div>
+          <div class="stat-label">Belediye birimi</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:12px;">
+      <div class="card card-accent-green">
+        <h4 style="margin-bottom:8px; color:var(--text);">Gelir Modeli</h4>
+        <div style="display:flex; flex-direction:column; gap:6px; font-size:12px;">
+          <div>📊 <span class="highlight">SaaS Abonelik</span> — Belediye başına aylık lisans</div>
+          <div>📋 <span class="highlight">Rapor Paketi</span> — İlçe bazında PDF rapor satışı</div>
+          <div>🔌 <span class="highlight">API Erişimi</span> — Sigorta/inşaat şirketlerine</div>
+          <div>🏛️ <span class="highlight">Kamu İhale</span> — Bakanlık düzeyinde veri anlaşmaları</div>
+        </div>
+      </div>
+      <div class="card" style="background:rgba(16,185,129,.05); border-color:rgba(16,185,129,.3);">
+        <p style="font-size:12px;"><strong class="accent-green">Rekabet Avantajı:</strong> Mevcut çözümler ya pahalı LiDAR tarama araçları ya da yavaş manuel denetim. nihAI Muhtar, var olan Street View altyapısıyla maliyeti <strong class="highlight">10x düşürüyor.</strong></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SLIDE 10 — CALL TO ACTION / CLOSE
+═══════════════════════════════════════════════════════════ -->
+<div class="slide" style="justify-content:center; min-height:210mm;">
+  <div class="cover-bg"></div>
+  <div class="orb" style="width:450px;height:450px;background:var(--green);top:-150px;right:-100px;"></div>
+  <div class="orb" style="width:300px;height:300px;background:var(--purple);bottom:-50px;left:-50px;"></div>
+
+  <div class="slide-header">
+    <div class="logo-mark"><span class="ni">nih</span><span class="hAI">AI</span> Muhtar</div>
+    <span class="slide-number">Thank You · 10 / 10</span>
+  </div>
+
+  <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+    <div style="font-size:64px; margin-bottom:16px;">🏙️</div>
+    <div class="eyebrow" style="text-align:center;">Build for Cities, Powered by AI</div>
+    <h1 style="margin-bottom:20px; font-size:42px;">
+      Şehri <span class="accent-green">Gören</span><br>
+      Şehri <span class="accent-blue">Anlayan</span><br>
+      Şehri <span class="accent-purple">Koruyan</span>
+    </h1>
+
+    <p style="font-size:16px; max-width:520px; line-height:1.7; color:#cbd5e1; margin-bottom:36px;">
+      nihAI Muhtar, Agentic AI geliştirme süreciyle; yol hasarı, ısı adası ve bina riski sorunlarını
+      çözen, belediyeler için ölçeklenebilir bir kentsel zeka platformudur.
+    </p>
+
+    <div style="display:flex; gap:20px; justify-content:center; margin-bottom:40px;">
+      <div class="card" style="padding:20px 30px; text-align:center; min-width:140px;">
+        <div class="stat-value accent-green" style="font-size:32px;">3</div>
+        <div class="stat-label">Çalışan Modül</div>
+      </div>
+      <div class="card" style="padding:20px 30px; text-align:center; min-width:140px;">
+        <div class="stat-value accent-blue" style="font-size:32px;">4</div>
+        <div class="stat-label">AI Modeli</div>
+      </div>
+      <div class="card" style="padding:20px 30px; text-align:center; min-width:140px;">
+        <div class="stat-value accent-purple" style="font-size:32px;">100%</div>
+        <div class="stat-label">Kural Uyumu</div>
+      </div>
+      <div class="card" style="padding:20px 30px; text-align:center; min-width:140px;">
+        <div class="stat-value accent-orange" style="font-size:32px;">Live</div>
+        <div class="stat-label">Demo Hazır</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap; padding-top:20px; border-top:1px solid var(--border);">
+    <span class="badge badge-green">🛣️ RoadScore</span>
+    <span class="badge badge-blue">🌿 AirLens</span>
+    <span class="badge badge-purple">🏛️ FacadeScore</span>
+    <span class="badge badge-orange">⚡ Cursor Agentic AI</span>
+    <span class="badge" style="background:rgba(255,255,255,.05); border:1px solid var(--border); color:var(--text);">🔒 KVKK Uyumlu</span>
+  </div>
+</div>
+
+</body>
+</html>
