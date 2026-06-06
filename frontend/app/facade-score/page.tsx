@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import type {
   BuildingAnalysis,
-  DistrictHeatmap,
   AnalysisJob,
 } from '@/types/facadescore';
 import { RISK_COLORS, RISK_LABELS_TR } from '@/types/facadescore';
@@ -13,39 +12,23 @@ import {
   analyzeDistrict,
   listBuildingsByDistrict,
   getPriorityBuildings,
-  getAllHeatmaps,
   getJob,
   submitCitizenReport,
 } from '@/lib/facadescore';
+import { useNeighborhood } from '@/contexts/NeighborhoodContext';
 
 const FacadeScoreMap = dynamic(
   () => import('@/components/facadescore/FacadeScoreMap'),
   { ssr: false, loading: () => <MapSkeleton /> }
 );
 
-// Istanbul district centers (lat, lng)
-const ISTANBUL_DISTRICTS: Record<string, [number, number]> = {
-  Kadıköy:       [40.9903, 29.0232],
-  Beşiktaş:      [41.0422, 29.0077],
-  Fatih:         [41.0187, 28.9400],
-  Üsküdar:       [41.0241, 29.0165],
-  Beyoğlu:       [41.0380, 28.9750],
-  Şişli:         [41.0604, 28.9870],
-  Ataşehir:      [40.9827, 29.1240],
-  Maltepe:       [40.9359, 29.1523],
-  Kartal:        [40.8912, 29.1850],
-  Bakırköy:      [40.9810, 28.8750],
-};
-
-type ViewMode = 'heatmap' | 'district' | 'priority';
+type ViewMode = 'neighborhood' | 'priority';
 
 export default function FacadeScorePage() {
-  const [viewMode, setViewMode] = useState<ViewMode>('heatmap');
-  const [selectedDistrict, setSelectedDistrict] = useState<string>('');
+  const { neighborhood } = useNeighborhood();
+  const [viewMode, setViewMode] = useState<ViewMode>('neighborhood');
   const [buildings, setBuildings] = useState<BuildingAnalysis[]>([]);
-  const [heatmaps, setHeatmaps] = useState<DistrictHeatmap[]>([]);
   const [selectedBuilding, setSelectedBuilding] = useState<BuildingAnalysis | null>(null);
-  const [mapCenter, setMapCenter] = useState<[number, number]>([28.9784, 41.0082]);
   const [activeJob, setActiveJob] = useState<AnalysisJob | null>(null);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -54,12 +37,37 @@ export default function FacadeScorePage() {
   const [citizenSubmitting, setCitizenSubmitting] = useState(false);
   const [statusMsg, setStatusMsg] = useState('');
 
-  // Load heatmaps on mount
+  const mapCenter: [number, number] = neighborhood
+    ? [neighborhood.lng, neighborhood.lat]
+    : [28.9784, 41.0082];
+
+  const refreshNeighborhood = useCallback(async () => {
+    if (!neighborhood) return;
+    setLoading(true);
+    setApiError(null);
+    try {
+      const data = await listBuildingsByDistrict(neighborhood.name);
+      setBuildings(data ?? []);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Bilinmeyen hata';
+      if (msg.includes('500') || msg.toLowerCase().includes('table')) {
+        setApiError('Veritabanı tabloları henüz oluşturulmamış. Migration çalıştırın: make migrate-up');
+      } else if (msg.includes('404')) {
+        setBuildings([]);
+      } else {
+        setApiError(`API hatası: ${msg}`);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [neighborhood]);
+
+  // Auto-load buildings when neighborhood is available and in neighborhood view
   useEffect(() => {
-    getAllHeatmaps()
-      .then(data => setHeatmaps(data ?? []))
-      .catch(() => {});
-  }, []);
+    if (neighborhood && viewMode === 'neighborhood') {
+      refreshNeighborhood();
+    }
+  }, [neighborhood, viewMode, refreshNeighborhood]);
 
   // Poll active job
   useEffect(() => {
@@ -77,7 +85,7 @@ export default function FacadeScorePage() {
 
         if (job.status === 'completed') {
           setStatusMsg('');
-          await refreshDistrict(selectedDistrict);
+          await refreshNeighborhood();
         }
       } catch {
         clearInterval(interval);
@@ -85,47 +93,24 @@ export default function FacadeScorePage() {
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [activeJob, selectedDistrict]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const refreshDistrict = useCallback(async (district: string) => {
-    if (!district) return;
-    setLoading(true);
-    setApiError(null);
-    try {
-      const data = await listBuildingsByDistrict(district);
-      setBuildings(data ?? []);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Bilinmeyen hata';
-      if (msg.includes('500') || msg.toLowerCase().includes('table')) {
-        setApiError('Veritabanı tabloları henüz oluşturulmamış. Migration çalıştırın: make migrate-up');
-      } else if (msg.includes('404')) {
-        setBuildings([]);
-      } else {
-        setApiError(`API hatası: ${msg}`);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  }, [activeJob, refreshNeighborhood]);
 
   const handleStartAnalysis = async () => {
-    if (!selectedDistrict) return;
-    const center = ISTANBUL_DISTRICTS[selectedDistrict];
-    if (!center) return;
+    if (!neighborhood) return;
 
     setLoading(true);
     setApiError(null);
     setStatusMsg('Analiz başlatılıyor...');
     try {
       const res = await analyzeDistrict({
-        district: selectedDistrict,
-        center_lat: center[0],
-        center_lng: center[1],
-        radius_m: 300,
+        district: neighborhood.name,
+        center_lat: neighborhood.lat,
+        center_lng: neighborhood.lng,
+        radius_m: neighborhood.radius,
       });
       const job = await getJob(res.job_id);
       setActiveJob(job);
-      setViewMode('district');
+      setViewMode('neighborhood');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Bilinmeyen hata';
       setStatusMsg('');
@@ -133,14 +118,6 @@ export default function FacadeScorePage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleLoadDistrict = async (district: string) => {
-    setSelectedDistrict(district);
-    const center = ISTANBUL_DISTRICTS[district];
-    if (center) setMapCenter([center[1], center[0]]);
-    setViewMode('district');
-    await refreshDistrict(district);
   };
 
   const handleLoadPriority = async () => {
@@ -191,7 +168,7 @@ export default function FacadeScorePage() {
 
         {/* View mode tabs */}
         <div className="flex border-b border-slate-800">
-          {([['heatmap', '🗺️ Harita'], ['priority', '🚨 Acil 20']] as const).map(([mode, label]) => (
+          {([['neighborhood', '🗺️ Mahalle'], ['priority', '🚨 Acil 20']] as const).map(([mode, label]) => (
             <button
               key={mode}
               onClick={() => {
@@ -209,28 +186,27 @@ export default function FacadeScorePage() {
           ))}
         </div>
 
-        {/* District selector */}
+        {/* Neighborhood info */}
         <div className="p-4 border-b border-slate-800">
-          <label className="block text-xs text-slate-400 mb-1.5">İlçe Seç</label>
-          <select
-            value={selectedDistrict}
-            onChange={e => handleLoadDistrict(e.target.value)}
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
-          >
-            <option value="">— İlçe seçin —</option>
-            {Object.keys(ISTANBUL_DISTRICTS).map(d => (
-              <option key={d} value={d}>{d}</option>
-            ))}
-          </select>
-
-          {selectedDistrict && (
-            <button
-              onClick={handleStartAnalysis}
-              disabled={loading || !!activeJob && activeJob.status === 'processing'}
-              className="mt-2 w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg text-sm font-medium transition-colors"
-            >
-              {loading ? 'Başlatılıyor...' : '🔍 Analizi Başlat'}
-            </button>
+          {neighborhood ? (
+            <>
+              <div className="text-xs text-slate-400 mb-1.5">Aktif Mahalle</div>
+              <div className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 mb-2">
+                <div className="text-sm font-medium text-white">{neighborhood.name}</div>
+                <div className="text-xs text-slate-400 mt-0.5">{neighborhood.district}</div>
+              </div>
+              <button
+                onClick={handleStartAnalysis}
+                disabled={loading || (!!activeJob && activeJob.status === 'processing')}
+                className="w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg text-sm font-medium transition-colors"
+              >
+                {loading ? 'Başlatılıyor...' : '🔍 Analizi Başlat'}
+              </button>
+            </>
+          ) : (
+            <div className="text-xs text-slate-500 text-center py-2">
+              Mahalle seçilmedi. Dashboard&apos;dan mahalle seçin.
+            </div>
           )}
 
           {statusMsg && (
@@ -251,34 +227,11 @@ export default function FacadeScorePage() {
           )}
         </div>
 
-        {/* Heatmap overview */}
-        {viewMode === 'heatmap' && heatmaps.length > 0 && (
-          <div className="flex-1 overflow-y-auto p-3 space-y-2">
-            <div className="text-xs text-slate-500 font-semibold px-1 mb-2">İLÇE RİSK DAĞILIMI</div>
-            {heatmaps.map(hm => (
-              <button
-                key={hm.district}
-                onClick={() => handleLoadDistrict(hm.district)}
-                className="w-full text-left bg-slate-800 hover:bg-slate-750 rounded-lg p-3 transition-colors border border-slate-700 hover:border-slate-600"
-              >
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-slate-200">{hm.district}</span>
-                  <span className="text-xs text-slate-400">{hm.total_buildings} bina</span>
-                </div>
-                <RiskBar heatmap={hm} />
-                <div className="text-xs text-slate-500 mt-1">
-                  Ort. skor: {hm.avg_health_score.toFixed(1)}
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Building list for district/priority view */}
-        {(viewMode === 'district' || viewMode === 'priority') && (
+        {/* Building list */}
+        {(viewMode === 'neighborhood' || viewMode === 'priority') && (
           <div className="flex-1 overflow-y-auto p-3 space-y-2">
             <div className="text-xs text-slate-500 font-semibold px-1 mb-2">
-              {viewMode === 'priority' ? 'ACİL İNCELEME GEREKENLEr' : `${selectedDistrict.toUpperCase()} BİNALARI`}
+              {viewMode === 'priority' ? 'ACİL İNCELEME GEREKENLEr' : `${neighborhood?.name?.toUpperCase() ?? ''} BİNALARI`}
               {buildings.length > 0 && <span className="ml-2 text-slate-600">({buildings.length})</span>}
             </div>
 
@@ -335,8 +288,8 @@ export default function FacadeScorePage() {
         <div className="h-12 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-5">
           <div className="flex items-center gap-3 text-sm text-slate-400">
             <span>
-              {viewMode === 'heatmap' && 'İstanbul İlçe Risk Haritası'}
-              {viewMode === 'district' && selectedDistrict && `${selectedDistrict} — Bina Analizi`}
+              {viewMode === 'neighborhood' && neighborhood && `${neighborhood.name} — Bina Analizi`}
+              {viewMode === 'neighborhood' && !neighborhood && 'Mahalle seçilmedi'}
               {viewMode === 'priority' && 'Acil İnceleme Gereken 20 Bina'}
             </span>
           </div>
@@ -365,6 +318,12 @@ export default function FacadeScorePage() {
               selectedBuildingId={selectedBuilding?.id ?? null}
               onBuildingSelect={setSelectedBuilding}
               center={mapCenter}
+              neighborhood={neighborhood ? {
+                lat: neighborhood.lat,
+                lng: neighborhood.lng,
+                radius: neighborhood.radius,
+                name: neighborhood.name,
+              } : undefined}
             />
           </div>
 
@@ -434,27 +393,6 @@ export default function FacadeScorePage() {
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function RiskBar({ heatmap }: { heatmap: DistrictHeatmap }) {
-  const total = heatmap.total_buildings || 1;
-  const segments = [
-    { count: heatmap.healthy_count, color: RISK_COLORS.HEALTHY },
-    { count: heatmap.attention_count, color: RISK_COLORS.ATTENTION },
-    { count: heatmap.risky_count, color: RISK_COLORS.RISKY },
-    { count: heatmap.emergency_count, color: RISK_COLORS.EMERGENCY },
-  ];
-
-  return (
-    <div className="flex rounded-full overflow-hidden h-2 gap-px">
-      {segments.map((s, i) => (
-        <div
-          key={i}
-          style={{ width: `${(s.count / total) * 100}%`, backgroundColor: s.color }}
-        />
-      ))}
     </div>
   );
 }

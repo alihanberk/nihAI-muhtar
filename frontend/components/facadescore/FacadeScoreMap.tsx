@@ -5,12 +5,52 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import type { BuildingAnalysis } from '@/types/facadescore';
 import { RISK_COLORS, RISK_LABELS_TR } from '@/types/facadescore';
+import { circlePolygonCoords } from '@/data/neighborhoods';
+
+export interface NeighborhoodInfo {
+  lat: number;
+  lng: number;
+  radius: number;
+  name: string;
+}
+
+const MASK_SOURCE   = 'fs-nb-mask-source';
+const MASK_LAYER    = 'fs-nb-mask-layer';
+const BORDER_SOURCE = 'fs-nb-border-source';
+const BORDER_GLOW   = 'fs-nb-border-glow';
+const BORDER_LAYER  = 'fs-nb-border-layer';
+
+function buildCircleMask(lat: number, lng: number, radius: number): GeoJSON.Feature<GeoJSON.Polygon> {
+  return {
+    type: 'Feature',
+    geometry: {
+      type: 'Polygon',
+      coordinates: [
+        [[-180, -85], [180, -85], [180, 85], [-180, 85], [-180, -85]],
+        circlePolygonCoords(lat, lng, radius),
+      ],
+    },
+    properties: {},
+  };
+}
+
+function buildCircleBorder(lat: number, lng: number, radius: number): GeoJSON.Feature<GeoJSON.Polygon> {
+  return {
+    type: 'Feature',
+    geometry: {
+      type: 'Polygon',
+      coordinates: [circlePolygonCoords(lat, lng, radius)],
+    },
+    properties: {},
+  };
+}
 
 interface FacadeScoreMapProps {
   buildings: BuildingAnalysis[];
   selectedBuildingId: string | null;
   onBuildingSelect: (building: BuildingAnalysis) => void;
   center?: [number, number];
+  neighborhood?: NeighborhoodInfo;
 }
 
 export default function FacadeScoreMap({
@@ -18,6 +58,7 @@ export default function FacadeScoreMap({
   selectedBuildingId,
   onBuildingSelect,
   center = [28.9784, 41.0082],
+  neighborhood,
 }: FacadeScoreMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -39,7 +80,6 @@ export default function FacadeScoreMap({
       style: 'mapbox://styles/mapbox/dark-v11',
       center,
       zoom: 14,
-      // Disable Mapbox telemetry to avoid noisy events.mapbox.com console errors
       trackResize: true,
       transformRequest: (url, resourceType) => {
         if (resourceType === 'Unknown' && url.includes('events.mapbox.com')) {
@@ -52,12 +92,58 @@ export default function FacadeScoreMap({
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
     map.current.addControl(new mapboxgl.ScaleControl(), 'bottom-left');
 
+    if (neighborhood) {
+      const { lat, lng, radius } = neighborhood;
+      map.current.once('load', () => {
+        const m = map.current;
+        if (!m) return;
+
+        m.addSource(MASK_SOURCE, {
+          type: 'geojson',
+          data: buildCircleMask(lat, lng, radius),
+        });
+        m.addLayer({
+          id: MASK_LAYER,
+          type: 'fill',
+          source: MASK_SOURCE,
+          paint: { 'fill-color': '#000000', 'fill-opacity': 0.58 },
+        });
+
+        m.addSource(BORDER_SOURCE, {
+          type: 'geojson',
+          data: buildCircleBorder(lat, lng, radius),
+        });
+        m.addLayer({
+          id: BORDER_GLOW,
+          type: 'line',
+          source: BORDER_SOURCE,
+          paint: {
+            'line-color': '#3b82f6',
+            'line-width': 10,
+            'line-opacity': 0.20,
+            'line-blur': 6,
+          },
+        });
+        m.addLayer({
+          id: BORDER_LAYER,
+          type: 'line',
+          source: BORDER_SOURCE,
+          paint: {
+            'line-color': '#93c5fd',
+            'line-width': 2,
+            'line-opacity': 0.90,
+            'line-dasharray': [5, 3],
+          },
+        });
+      });
+    }
+
     return () => {
       clearMarkers();
       map.current?.remove();
       map.current = null;
     };
-  }, [center, clearMarkers]);
+  }, [center, neighborhood, clearMarkers]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!map.current) return;
