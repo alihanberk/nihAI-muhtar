@@ -41,9 +41,19 @@ docker-down: ## Stop Docker services
 docker-logs: ## Show Docker logs
 	@cd .. && docker-compose logs -f
 
-migrate: ## Run database migrations (placeholder)
-	@echo "Running migrations..."
-	@echo "Migration system will be implemented"
+migrate-up: ## Run database migrations up
+	@echo "Running migrations up..."
+	@migrate -path migrations -database "postgresql://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable" up
+
+migrate-down: ## Rollback database migrations
+	@echo "Rolling back migrations..."
+	@migrate -path migrations -database "postgresql://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable" down 1
+
+migrate-force: ## Force migration version (usage: make migrate-force VERSION=1)
+	@migrate -path migrations -database "postgresql://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable" force $(VERSION)
+
+migrate-create: ## Create new migration (usage: make migrate-create NAME=create_something)
+	@migrate create -ext sql -dir migrations -seq $(NAME)
 
 deps: ## Download dependencies
 	@echo "Downloading dependencies..."

@@ -14,6 +14,12 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	
+	"github.com/nihai-muhtar/backend/internal/application/auth"
+	"github.com/nihai-muhtar/backend/internal/infrastructure/database"
+	"github.com/nihai-muhtar/backend/internal/infrastructure/handler"
+	"github.com/nihai-muhtar/backend/internal/infrastructure/repository"
+	"github.com/nihai-muhtar/backend/internal/shared/security"
 )
 
 func main() {
@@ -25,6 +31,37 @@ func main() {
 
 	// Load configuration
 	config := loadConfig()
+
+	// Initialize database connection
+	dbConfig := database.Config{
+		Host:     config.DBHost,
+		Port:     config.DBPort,
+		User:     config.DBUser,
+		Password: config.DBPassword,
+		DBName:   config.DBName,
+		SSLMode:  "disable",
+	}
+
+	db, err := database.NewPostgresConnection(dbConfig)
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer database.Close(db)
+
+	slog.Info("Database connection established")
+
+	// Initialize repositories
+	userRepo := repository.NewUserRepository(db)
+
+	// Initialize services
+	jwtConfig := security.JWTConfig{
+		SecretKey:       config.JWTSecret,
+		ExpirationHours: 24,
+	}
+	authService := auth.NewService(userRepo, jwtConfig)
+
+	// Initialize handlers
+	authHandler := handler.NewAuthHandler(authService)
 
 	// Initialize router
 	r := chi.NewRouter()
@@ -55,22 +92,32 @@ func main() {
 
 	r.Get("/health/ready", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ready","services":{"postgres":"healthy","redis":"healthy"}}`))
+		
+		// Check database health
+		dbHealthy := "healthy"
+		if err := database.HealthCheck(db); err != nil {
+			dbHealthy = "unhealthy"
+			w.WriteHeader(http.StatusServiceUnavailable)
+		} else {
+			w.WriteHeader(http.StatusOK)
+		}
+		
+		response := fmt.Sprintf(`{"status":"ready","services":{"postgres":"%s"}}`, dbHealthy)
+		w.Write([]byte(response))
 	})
 
 	// API routes
 	r.Route("/api/v1", func(r chi.Router) {
 		// Auth routes
-		r.Post("/auth/register", handleRegister)
-		r.Post("/auth/login", handleLogin)
+		r.Post("/auth/register", authHandler.Register)
+		r.Post("/auth/login", authHandler.Login)
 
-		// Detection routes
+		// Detection routes (placeholders for now)
 		r.Post("/detections", handleCreateDetection)
 		r.Get("/detections", handleListDetections)
 		r.Get("/detections/{id}", handleGetDetection)
 
-		// Report routes
+		// Report routes (placeholders for now)
 		r.Post("/reports", handleCreateReport)
 		r.Get("/reports", handleListReports)
 		r.Get("/reports/{id}", handleGetReport)
@@ -122,6 +169,7 @@ type Config struct {
 	DBName     string
 	RedisHost  string
 	RedisPort  string
+	JWTSecret  string
 }
 
 func loadConfig() *Config {
@@ -135,6 +183,7 @@ func loadConfig() *Config {
 		DBName:     getEnv("DB_NAME", "muhtar_db"),
 		RedisHost:  getEnv("REDIS_HOST", "localhost"),
 		RedisPort:  getEnv("REDIS_PORT", "6379"),
+		JWTSecret:  getEnv("JWT_SECRET", "your-secret-key-change-this-in-production"),
 	}
 }
 
@@ -145,19 +194,7 @@ func getEnv(key, defaultValue string) string {
 	return defaultValue
 }
 
-// Placeholder handlers
-func handleRegister(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Register endpoint - implementation pending"}`))
-}
-
-func handleLogin(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Login endpoint - implementation pending"}`))
-}
-
+// Placeholder handlers for future modules
 func handleCreateDetection(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
