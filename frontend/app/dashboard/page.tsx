@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useAuth } from '@/contexts/AuthContext';
-import { useNeighborhood } from '@/contexts/NeighborhoodContext';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import Link from 'next/link';
+import { useAuth } from "@/contexts/AuthContext";
+import { useNeighborhood } from "@/contexts/NeighborhoodContext";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import Link from "next/link";
 
 interface AppCard {
   id: string;
@@ -21,7 +21,8 @@ const apps: AppCard[] = [
   {
     id: "roadscore",
     title: "RoadScore",
-    description: "Rota üzerindeki yol yüzey kalitesini AI ile analiz et. Street View + HuggingFace.",
+    description:
+      "Rota üzerindeki yol yüzey kalitesini AI ile analiz et. Street View + HuggingFace.",
     icon: "🛣",
     iconBg: "bg-blue-100",
     color: "text-blue-600",
@@ -30,11 +31,22 @@ const apps: AppCard[] = [
   {
     id: "facadescore",
     title: "FacadeScore",
-    description: "Bina cephelerindeki yapısal bozulmaları tespit et. Deprem riski odaklı sağlık haritası. DETR + CLIP ile iki aşamalı AI analizi.",
+    description:
+      "Bina cephelerindeki yapısal bozulmaları tespit et. Deprem riski odaklı sağlık haritası. DETR + CLIP ile iki aşamalı AI analizi.",
     icon: "🏚️",
     iconBg: "bg-orange-100",
     color: "text-orange-600",
     href: "/facade-score",
+  },
+  {
+    id: "airlens",
+    title: "AirLens",
+    description:
+      "Street View görüntülerinden ağaç & bitki oranı hesapla. Sokak bazında yeşillik skoru ve ısı adası haritası.",
+    icon: "🌿",
+    iconBg: "bg-green-100",
+    color: "text-green-600",
+    href: "/airlens",
   },
 ];
 
@@ -45,7 +57,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!user) {
-      router.push('/login');
+      router.push("/login");
     }
   }, [user, router]);
 
@@ -74,12 +86,16 @@ export default function DashboardPage() {
               {neighborhood && (
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
                   <span className="text-blue-600 text-sm">📍</span>
-                  <span className="text-sm font-medium text-blue-700">{neighborhood.name}</span>
-                  <span className="text-xs text-blue-400">{neighborhood.district}</span>
+                  <span className="text-sm font-medium text-blue-700">
+                    {neighborhood.name}
+                  </span>
+                  <span className="text-xs text-blue-400">
+                    {neighborhood.district}
+                  </span>
                   <button
                     onClick={() => {
                       clearNeighborhood();
-                      router.push('/select-neighborhood');
+                      router.push("/select-neighborhood");
                     }}
                     className="text-blue-400 hover:text-blue-600 text-xs ml-1 transition-colors"
                     title="Mahalle değiştir"
@@ -90,7 +106,7 @@ export default function DashboardPage() {
               )}
               {!neighborhood && (
                 <button
-                  onClick={() => router.push('/select-neighborhood')}
+                  onClick={() => router.push("/select-neighborhood")}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700 hover:bg-amber-100 transition-colors"
                 >
                   <span>⚠️</span>
@@ -124,12 +140,12 @@ export default function DashboardPage() {
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
             {neighborhood
               ? `Hoş Geldiniz, ${neighborhood.name} Muhtarı`
-              : 'Hoş Geldiniz'}
+              : "Hoş Geldiniz"}
           </h2>
           <p className="text-gray-600">
             {neighborhood
               ? `${neighborhood.district} ilçesi, ${neighborhood.name} mahallesi · Uygulamalarınızı seçin`
-              : 'Nihai Muhtar SuperApp - Uygulamalarınızı seçin ve işlemlerinize başlayın'}
+              : "Nihai Muhtar SuperApp - Uygulamalarınızı seçin ve işlemlerinize başlayın"}
           </p>
         </div>
 
@@ -139,13 +155,15 @@ export default function DashboardPage() {
             {apps.map((app) => (
               <Link
                 key={app.id}
-                href={app.comingSoon ? '#' : app.href}
-                className={`group ${app.comingSoon ? 'cursor-not-allowed' : ''}`}
+                href={app.comingSoon ? "#" : app.href}
+                className={`group ${app.comingSoon ? "cursor-not-allowed" : ""}`}
                 onClick={(e) => app.comingSoon && e.preventDefault()}
               >
-                <div className={`bg-white rounded-xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 h-full relative ${
-                  app.comingSoon ? 'opacity-60' : 'hover:border-blue-200'
-                }`}>
+                <div
+                  className={`bg-white rounded-xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 h-full relative ${
+                    app.comingSoon ? "opacity-60" : "hover:border-blue-200"
+                  }`}
+                >
                   {app.comingSoon && (
                     <div className="absolute top-4 right-4 bg-yellow-100 text-yellow-800 text-xs font-semibold px-3 py-1 rounded-full">
                       Yakında
@@ -153,12 +171,16 @@ export default function DashboardPage() {
                   )}
 
                   {/* Icon */}
-                  <div className={`w-16 h-16 ${app.iconBg} rounded-xl flex items-center justify-center mb-5`}>
+                  <div
+                    className={`w-16 h-16 ${app.iconBg} rounded-xl flex items-center justify-center mb-5`}
+                  >
                     <span className="text-4xl">{app.icon}</span>
                   </div>
 
                   {/* Title */}
-                  <h3 className={`text-2xl font-semibold text-gray-900 mb-3 ${!app.comingSoon && 'group-hover:text-blue-600'} transition-colors`}>
+                  <h3
+                    className={`text-2xl font-semibold text-gray-900 mb-3 ${!app.comingSoon && "group-hover:text-blue-600"} transition-colors`}
+                  >
                     {app.title}
                   </h3>
 
@@ -171,8 +193,18 @@ export default function DashboardPage() {
                   {!app.comingSoon && (
                     <div className="mt-6 flex items-center gap-2 text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
                       <span className="text-sm font-medium">Uygulamayı Aç</span>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
                       </svg>
                     </div>
                   )}
@@ -188,7 +220,8 @@ export default function DashboardPage() {
                 Uygulamalar Ekleniyor
               </h3>
               <p className="text-gray-600">
-                SuperApp yapısı hazır. Uygulamalarınızı ekleyerek başlayabilirsiniz.
+                SuperApp yapısı hazır. Uygulamalarınızı ekleyerek
+                başlayabilirsiniz.
               </p>
             </div>
           </div>
@@ -201,27 +234,29 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-blue-200 text-sm font-medium uppercase tracking-wider">Aktif Muhtarlık Bölgesi</span>
+                    <span className="text-blue-200 text-sm font-medium uppercase tracking-wider">
+                      Aktif Muhtarlık Bölgesi
+                    </span>
                   </div>
                   <h3 className="text-2xl font-bold mb-1">
                     {neighborhood.name} Mahallesi
                   </h3>
                   <p className="text-blue-100">
-                    {neighborhood.district} İlçesi · {neighborhood.lat.toFixed(4)}°N, {neighborhood.lng.toFixed(4)}°E
+                    {neighborhood.district} İlçesi ·{" "}
+                    {neighborhood.lat.toFixed(4)}°N,{" "}
+                    {neighborhood.lng.toFixed(4)}°E
                   </p>
                   <button
                     onClick={() => {
                       clearNeighborhood();
-                      router.push('/select-neighborhood');
+                      router.push("/select-neighborhood");
                     }}
                     className="mt-4 text-xs px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
                   >
                     Mahalle Değiştir
                   </button>
                 </div>
-                <div className="text-6xl opacity-20">
-                  🏘️
-                </div>
+                <div className="text-6xl opacity-20">🏘️</div>
               </div>
             </div>
           ) : (
@@ -235,15 +270,13 @@ export default function DashboardPage() {
                     Analizlerin doğru çalışması için muhtarlık bölgenizi seçin.
                   </p>
                   <button
-                    onClick={() => router.push('/select-neighborhood')}
+                    onClick={() => router.push("/select-neighborhood")}
                     className="text-sm px-4 py-2 bg-white text-amber-700 font-semibold rounded-lg hover:bg-amber-50 transition-colors"
                   >
                     Mahalle Seç →
                   </button>
                 </div>
-                <div className="text-6xl opacity-20">
-                  📍
-                </div>
+                <div className="text-6xl opacity-20">📍</div>
               </div>
             </div>
           )}
