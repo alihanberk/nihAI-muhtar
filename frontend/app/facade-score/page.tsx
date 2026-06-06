@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 import type {
   BuildingAnalysis,
   AnalysisJob,
@@ -26,6 +27,7 @@ const FacadeScoreMap = dynamic(
 type ViewMode = 'neighborhood' | 'priority';
 
 export default function FacadeScorePage() {
+  const router = useRouter();
   const { neighborhood } = useNeighborhood();
   const [viewMode, setViewMode] = useState<ViewMode>('neighborhood');
   const [buildings, setBuildings] = useState<BuildingAnalysis[]>([]);
@@ -170,11 +172,32 @@ export default function FacadeScorePage() {
       <aside className="w-80 shrink-0 flex flex-col bg-slate-900 border-r border-slate-800">
         {/* Logo / title */}
         <div className="px-5 py-4 border-b border-slate-800">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">🏚️</span>
-            <div>
-              <div className="font-bold text-white text-base leading-tight">FacadeScore</div>
-              <div className="text-xs text-slate-400">Yapı Sağlığı Haritası</div>
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="p-2 -ml-2 hover:bg-slate-800 rounded-lg transition-colors group"
+              title="Dashboard'a dön"
+            >
+              <svg
+                className="w-5 h-5 text-slate-400 group-hover:text-white transition-colors"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+            <div className="flex items-center gap-2 flex-1 ml-2">
+              <span className="text-2xl">🏚️</span>
+              <div>
+                <div className="font-bold text-white text-base leading-tight">FacadeScore</div>
+                <div className="text-xs text-slate-400">Yapı Sağlığı Haritası</div>
+              </div>
             </div>
           </div>
         </div>
