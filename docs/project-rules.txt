@@ -1,0 +1,49 @@
+KURAL BİLDİRGESİ: Cursor Hackathon - AI-Driven Kentsel Çözümle
+Etkinlik Tarihi: 6 Haziran Cumartesi | Operasyon Saati: 10:00 - 17:00 | Lokasyon: Dozze Coffee Başakşehir
+
+Bu döküman, hackathon süresince uyulması zorunlu olan teknik, operasyonel ve etik çerçeveyi belirler. Tüm katılımcıların bu bildirgeyi okuduğu ve kabul ettiği varsayılır.
+
+🏛️ BÖLÜM 1: ZORUNLU TEKNOLOJİ YIĞINI (TECH STACK)
+Projelerinizin değerlendirilmeye alınabilmesi için aşağıdaki mimariye eksiksiz uyulmalıdır:
+
+Frontend (Web): Next.js
+
+Frontend (Mobil): Expo
+
+Backend: Go (Golang)
+
+Zorunlu Kural: Backend altyapısı olarak kesinlikle masterfabric-go GitHub reposundaki mimari kullanılacaktır. Kendi mimarinizi kurmanız kabul edilmez.
+
+AI Veri Seti & Modeller: Hugging Face platformu kullanılacaktır.
+
+Harici Veri Kaynağı: Google Street View API (İlk 10.000 istek kotası dâhilinde).
+
+Hosting Çözümleri: Web için Vercel, Backend için Render.com.
+
+🛠️ BÖLÜM 2: GELİŞTİRME KÜLTÜRÜ VE AI KULLANIMI
+Yalnızca ne ürettiğiniz değil, nasıl ürettiğiniz de puanlanacaktır.
+
+Sürekli Entegrasyon (GitHub): Tek seferlik kod yüklemeleri diskalifiye veya puan silme sebebidir. Kodunuzu geliştirirken düzenli commit'ler (anlamlı mesajlarla birlikte) atmak zorundasınız. Jüri, sürecinizi bu commit logları üzerinden takip edecektir.
+
+AI Odaklı Geliştirme (Cursor IDE): Tüm ekiplerin geliştirme ortamı olarak Cursor IDE kullanması zorunludur.
+
+Agentic Yapı: Projelerinizde mutlaka Cursor 'Ruleset' (kurallı ayarlama) kurgusu oluşturulmalıdır.
+
+Şeffaflık (README): Hangi AI araçlarını, hangi spesifik prompt tekniklerini veya Cursor özelliklerini projenize nasıl entegre ettiğinizi README dosyanızda detaylıca belgelemeniz zorunludur.
+
+💡 EKSTRA PUAN FIRSATI (Cursor CLI & SDK): Geliştirme süreçlerinde veya otomasyonlarda Cursor CLI (Command Line Interface) ve Cursor SDK kullanan, bunu projelerine entegre eden ve README dosyasında nasıl kullandığını belgeleyen ekipler, AI Adaptasyonu değerlendirmesinde ekstra puan/avantaj kazanacaktır.
+
+🛡️ BÖLÜM 3: KIRMIZI ÇİZGİMİZ - VERİ GİZLİLİĞİ (KVKK)
+Toplumsal fayda, bireysel gizliliği ihlal ederek sağlanamaz.
+
+Sınırlandırılmış Odak: Geliştirilen görüntü işleme modelleri sadece cansız kentsel objeleri (tabela, çöp kutusu, hasarlı yol vb.) hedef alabilir.
+
+Kişisel Veri Yasağı: Kimlik tespiti, yüz tanıma, plaka okuma veya kişi profilleme yapılması kesinlikle yasaktır.
+
+Bulanıklaştırma (Blurring): Veri setinizdeki insan yüzleri ve araç plakaları model çalıştırılmadan önce geri döndürülemez şekilde anonimleştirilmelidir.
+
+Veri İmhası: Hackathon sona erdiğinde tüm ham görseller kalıcı olarak silinmeli ve ekipler bu işlemi belgelendirmelidir. İhlal durumunda takım diskalifiye edilir.
+
+⚠️ ÖDÜL HAKEDİŞ ŞARTLARI (BUNLAR OLMADAN ÖDÜL ALINAMAZ): Maddi ödüle ve derecelendirmeye hak kazanabilmek için ekiplerin etkinlik sonunda Jüriye Sunum yapması ve çalışan ürünün Canlı Demosunu (Live Demo) göstermesi kesinlikle zorunludur. Çalışmayan projeler (sadece fikir veya sunum) ödüllendirilmez.
+
+Başarı, kurallara uyan yenilikçi fikirlerin, çalışan kodlara dönüşmesiyle gelir. Kolay gelsin. 🚀
