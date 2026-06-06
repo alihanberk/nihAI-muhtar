@@ -71,7 +71,7 @@ npm run dev
 
 | Servis | Platform | URL |
 |--------|----------|-----|
-| Frontend | Vercel | `https://[proje-adiniz].vercel.app` |
+| Frontend | Vercel | https://frontend-gamma-three-33.vercel.app |
 | Backend API | Render.com | `https://nihai-muhtar-api.onrender.com` |
 
 > Deploy adımları: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)
