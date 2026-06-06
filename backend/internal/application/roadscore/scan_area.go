@@ -24,12 +24,14 @@ import (
 
 const (
 	// defaultGridSpacingM is the distance between sampled grid points in meters.
-	// At 130 m, a 600 m-radius circle yields ~50 points — a good balance between
-	// coverage and Street View API quota consumption.
-	defaultGridSpacingM = 130.0
+	// At 150 m, a 750 m-radius circle yields ~78 points — full coverage without
+	// excessive Street View API quota consumption.
+	defaultGridSpacingM = 150.0
 
 	// maxScanPoints caps the number of sampled points to protect API quota.
-	maxScanPoints = 60
+	// Using systematic row-interleaved sampling when the cap is exceeded so
+	// that coverage is spread evenly across the whole circle, not just one half.
+	maxScanPoints = 100
 
 	// scanWorkers controls concurrent Street View + AI requests.
 	scanWorkers = 5
@@ -72,7 +74,14 @@ func (uc *ScanAreaUseCase) Execute(ctx context.Context, req roadscore.AreaScanRe
 	// 1. Generate candidate grid points
 	candidates := generateCircleGrid(req.CenterLat, req.CenterLng, req.RadiusMeters, defaultGridSpacingM)
 	if len(candidates) > maxScanPoints {
-		candidates = candidates[:maxScanPoints]
+		// Systematic stride sampling — picks every Nth point so coverage is
+		// distributed evenly across the whole circle instead of just one half.
+		stride := len(candidates) / maxScanPoints
+		sampled := make([]directions.Coordinate, 0, maxScanPoints)
+		for i := 0; i < len(candidates) && len(sampled) < maxScanPoints; i += stride {
+			sampled = append(sampled, candidates[i])
+		}
+		candidates = sampled
 	}
 
 	slog.Info("area scan started",

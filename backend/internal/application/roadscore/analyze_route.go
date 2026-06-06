@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"math"
 	"sort"
 	"sync"
 	"time"
@@ -308,15 +309,19 @@ func mockSegmentScore(lat, lng float64) *huggingface.ClassifyResult {
 		cat = "CRITICAL"
 	}
 
-	// Derive a second hash for confidence so it varies independently of score.
-	h2 := uint32(2166136261)
-	s2 := fmt.Sprintf("%.4f:%.4f:conf", lat, lng)
-	for i := 0; i < len(s2); i++ {
-		h2 ^= uint32(s2[i])
-		h2 *= 16777619
+	// Confidence reflects model certainty: scores near category boundaries
+	// (25, 50, 75) are ambiguous → lower confidence; scores near category
+	// centres (12, 37, 62, 87) are clear-cut → higher confidence.
+	boundaries := []float64{0, 25, 50, 75, 100}
+	minDist := 100.0
+	for _, b := range boundaries {
+		if d := math.Abs(score - b); d < minDist {
+			minDist = d
+		}
 	}
-	// Range: 0.63 – 0.96 (realistic AI confidence spread)
-	confidence := 0.63 + float64(h2%34)/100.0
+	// minDist: 0 (exactly on boundary) → 12.5 (midpoint of a category band)
+	// confidence: 0.61 (most ambiguous) → 0.96 (most certain)
+	confidence := 0.61 + (minDist/12.5)*0.35
 
 	return &huggingface.ClassifyResult{
 		DamageScore: score,
