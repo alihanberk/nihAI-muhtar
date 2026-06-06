@@ -23,7 +23,8 @@ export default function RegisterPage() {
 
     try {
       await register(formData);
-      router.push('/dashboard');
+      // New users always go to neighborhood selection first
+      router.push('/select-neighborhood');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Kayıt başarısız oldu');
     } finally {

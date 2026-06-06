@@ -4,10 +4,12 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNeighborhood } from '@/contexts/NeighborhoodContext';
 
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
+  const { hasSelectedNeighborhood } = useNeighborhood();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -22,7 +24,8 @@ export default function LoginPage() {
 
     try {
       await login(formData);
-      router.push('/dashboard');
+      // First login or no neighborhood selected → pick neighborhood first
+      router.push(hasSelectedNeighborhood ? '/dashboard' : '/select-neighborhood');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Giriş başarısız oldu');
     } finally {

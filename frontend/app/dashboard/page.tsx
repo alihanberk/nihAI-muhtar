@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { useNeighborhood } from '@/contexts/NeighborhoodContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
@@ -31,6 +32,7 @@ const apps: AppCard[] = [
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
+  const { neighborhood, clearNeighborhood } = useNeighborhood();
   const router = useRouter();
 
   useEffect(() => {
@@ -61,6 +63,32 @@ export default function DashboardPage() {
 
             {/* User Info */}
             <div className="flex items-center gap-3">
+              {neighborhood && (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
+                  <span className="text-blue-600 text-sm">📍</span>
+                  <span className="text-sm font-medium text-blue-700">{neighborhood.name}</span>
+                  <span className="text-xs text-blue-400">{neighborhood.district}</span>
+                  <button
+                    onClick={() => {
+                      clearNeighborhood();
+                      router.push('/select-neighborhood');
+                    }}
+                    className="text-blue-400 hover:text-blue-600 text-xs ml-1 transition-colors"
+                    title="Mahalle değiştir"
+                  >
+                    ✎
+                  </button>
+                </div>
+              )}
+              {!neighborhood && (
+                <button
+                  onClick={() => router.push('/select-neighborhood')}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700 hover:bg-amber-100 transition-colors"
+                >
+                  <span>⚠️</span>
+                  <span>Mahalle seç</span>
+                </button>
+              )}
               <div className="w-9 h-9 bg-gray-200 rounded-full flex items-center justify-center">
                 <span className="text-gray-600 text-sm font-medium">
                   {user.email[0].toUpperCase()}
@@ -86,10 +114,14 @@ export default function DashboardPage() {
       <main className="px-12 py-12">
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Hoş Geldiniz
+            {neighborhood
+              ? `Hoş Geldiniz, ${neighborhood.name} Muhtarı`
+              : 'Hoş Geldiniz'}
           </h2>
           <p className="text-gray-600">
-            Nihai Muhtar SuperApp - Uygulamalarınızı seçin ve işlemlerinize başlayın
+            {neighborhood
+              ? `${neighborhood.district} ilçesi, ${neighborhood.name} mahallesi · Uygulamalarınızı seçin`
+              : 'Nihai Muhtar SuperApp - Uygulamalarınızı seçin ve işlemlerinize başlayın'}
           </p>
         </div>
 
@@ -154,23 +186,59 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Info Card */}
+        {/* Neighborhood Info Card */}
         <div className="mt-12 max-w-7xl">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-8 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-2xl font-bold mb-2">
-                  Nihai Muhtar SuperApp
-                </h3>
-                <p className="text-blue-100">
-                  Birden fazla uygulamayı tek platformda yönetin
-                </p>
-              </div>
-              <div className="text-6xl opacity-20">
-                🏙️
+          {neighborhood ? (
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-8 text-white shadow-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-blue-200 text-sm font-medium uppercase tracking-wider">Aktif Muhtarlık Bölgesi</span>
+                  </div>
+                  <h3 className="text-2xl font-bold mb-1">
+                    {neighborhood.name} Mahallesi
+                  </h3>
+                  <p className="text-blue-100">
+                    {neighborhood.district} İlçesi · {neighborhood.lat.toFixed(4)}°N, {neighborhood.lng.toFixed(4)}°E
+                  </p>
+                  <button
+                    onClick={() => {
+                      clearNeighborhood();
+                      router.push('/select-neighborhood');
+                    }}
+                    className="mt-4 text-xs px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+                  >
+                    Mahalle Değiştir
+                  </button>
+                </div>
+                <div className="text-6xl opacity-20">
+                  🏘️
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-8 text-white shadow-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-2xl font-bold mb-2">
+                    Muhtarlık Bölgesi Seçilmedi
+                  </h3>
+                  <p className="text-amber-100 mb-4">
+                    Analizlerin doğru çalışması için muhtarlık bölgenizi seçin.
+                  </p>
+                  <button
+                    onClick={() => router.push('/select-neighborhood')}
+                    className="text-sm px-4 py-2 bg-white text-amber-700 font-semibold rounded-lg hover:bg-amber-50 transition-colors"
+                  >
+                    Mahalle Seç →
+                  </button>
+                </div>
+                <div className="text-6xl opacity-20">
+                  📍
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>

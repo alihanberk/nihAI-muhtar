@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, lazy, Suspense } from "react";
+import { useState, useCallback, lazy, Suspense, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   analyzeRoute,
@@ -10,6 +10,7 @@ import {
   SegmentScore,
   categoryColor,
 } from "@/lib/roadscore";
+import { useNeighborhood } from "@/contexts/NeighborhoodContext";
 
 const RoadScoreMap = lazy(() => import("@/components/map/RoadScoreMap"));
 const RouteCard = lazy(() => import("@/components/roadscore/RouteCard"));
@@ -24,6 +25,7 @@ interface NamedPoint {
 
 export default function RoadScorePage() {
   const router = useRouter();
+  const { neighborhood } = useNeighborhood();
 
   // Location state (replaces raw lat/lng inputs)
   const [origin, setOrigin] = useState<NamedPoint | null>(null);
@@ -46,19 +48,43 @@ export default function RoadScorePage() {
 
   const [pdfLoading, setPdfLoading] = useState(false);
 
-  // Quick-fill shortcuts
-  const quickFill = (name: string) => {
-    const coords: Record<string, [string, number, number, string, number, number]> = {
-      taksim_besiktas: ["Taksim Meydanı, İstanbul", 41.0370, 28.9850, "Beşiktaş, İstanbul", 41.0430, 29.0065],
-      kadikoy_uskudar: ["Kadıköy, İstanbul",        40.9905, 29.0220, "Üsküdar, İstanbul",  41.0210, 29.0140],
-      levent_maslak:   ["Levent, İstanbul",          41.0790, 29.0110, "Maslak, İstanbul",   41.1080, 29.0190],
-    };
-    const c = coords[name];
-    if (!c) return;
-    setOriginName(c[0] as string);
-    setOrigin({ name: c[0] as string, lat: c[1] as number, lng: c[2] as number });
-    setDestName(c[3] as string);
-    setDestination({ name: c[3] as string, lat: c[4] as number, lng: c[5] as number });
+  // Quick-fill shortcuts — centered on selected neighborhood if available
+  const quickFillOptions = useMemo(() => {
+    if (neighborhood) {
+      const { lat, lng, name, district } = neighborhood;
+      const offset = 0.008; // ~800m offset for intra-neighborhood routes
+      return [
+        {
+          label: `${name} Kuzey → Güney`,
+          origin: { name: `${name} Kuzey`, lat: lat + offset, lng },
+          dest:   { name: `${name} Güney`, lat: lat - offset, lng },
+        },
+        {
+          label: `${name} Doğu → Batı`,
+          origin: { name: `${name} Doğu`, lat, lng: lng + offset },
+          dest:   { name: `${name} Batı`, lat, lng: lng - offset },
+        },
+        {
+          label: `${name} → ${district} Merkezi`,
+          origin: { name: `${name}`, lat, lng },
+          dest:   { name: `${district} Merkezi`, lat: lat + offset * 1.5, lng: lng + offset },
+        },
+      ];
+    }
+    return [
+      { label: "Taksim → Beşiktaş", origin: { name: "Taksim Meydanı", lat: 41.0370, lng: 28.9850 }, dest: { name: "Beşiktaş", lat: 41.0430, lng: 29.0065 } },
+      { label: "Kadıköy → Üsküdar", origin: { name: "Kadıköy",        lat: 40.9905, lng: 29.0220 }, dest: { name: "Üsküdar",  lat: 41.0210, lng: 29.0140 } },
+      { label: "Levent → Maslak",   origin: { name: "Levent",          lat: 41.0790, lng: 29.0110 }, dest: { name: "Maslak",   lat: 41.1080, lng: 29.0190 } },
+    ];
+  }, [neighborhood]);
+
+  const quickFill = (idx: number) => {
+    const opt = quickFillOptions[idx];
+    if (!opt) return;
+    setOriginName(opt.origin.name);
+    setOrigin(opt.origin);
+    setDestName(opt.dest.name);
+    setDestination(opt.dest);
   };
 
   // Map click handler
@@ -124,6 +150,9 @@ export default function RoadScorePage() {
       doc.setFontSize(10);
       doc.text(`Analiz ID: ${result.analysis_id}`, 14, 28);
       doc.text(`Tarih: ${new Date().toLocaleDateString("tr-TR")}`, 14, 35);
+      if (neighborhood) {
+        doc.text(`Muhtarlık: ${neighborhood.name} Mahallesi, ${neighborhood.district}`, 110, 28);
+      }
 
       let y = 50;
       doc.setTextColor(0, 0, 0);
@@ -182,6 +211,16 @@ export default function RoadScorePage() {
             <span className="text-blue-400">Road</span>
             <span className="text-white">Score</span>
           </h1>
+          {neighborhood && (
+            <>
+              <span className="text-white/20">|</span>
+              <div className="flex items-center gap-1.5 text-xs">
+                <span className="text-white/40">📍</span>
+                <span className="text-white/70 font-medium">{neighborhood.name}</span>
+                <span className="text-white/30">{neighborhood.district}</span>
+              </div>
+            </>
+          )}
         </div>
         {result && (
           <button
@@ -252,20 +291,18 @@ export default function RoadScorePage() {
 
             {/* Quick-fill shortcuts */}
             <div>
-              <p className="text-xs text-white/30 mb-1.5">Hızlı seç:</p>
+              <p className="text-xs text-white/30 mb-1.5">
+                {neighborhood ? `${neighborhood.name} hızlı rotalar:` : 'Hızlı seç:'}
+              </p>
               <div className="flex flex-wrap gap-1.5">
-                {[
-                  { label: "Taksim → Beşiktaş", key: "taksim_besiktas" },
-                  { label: "Kadıköy → Üsküdar", key: "kadikoy_uskudar" },
-                  { label: "Levent → Maslak",   key: "levent_maslak"   },
-                ].map(({ label, key }) => (
+                {quickFillOptions.map((opt, idx) => (
                   <button
-                    key={key}
+                    key={idx}
                     type="button"
-                    onClick={() => quickFill(key)}
+                    onClick={() => quickFill(idx)}
                     className="text-xs px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-colors border border-white/5"
                   >
-                    {label}
+                    {opt.label}
                   </button>
                 ))}
               </div>
@@ -385,6 +422,8 @@ export default function RoadScorePage() {
               ]}
               onMapClick={handleMapClick}
               clickMode={clickMode}
+              initialCenter={neighborhood ? { lat: neighborhood.lat, lng: neighborhood.lng } : undefined}
+              initialZoom={neighborhood ? 14 : 11}
             />
 
             {/* Click mode hint overlay */}

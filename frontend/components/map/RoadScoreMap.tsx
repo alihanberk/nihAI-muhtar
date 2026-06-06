@@ -23,9 +23,11 @@ interface RoadScoreMapProps {
   activeRouteId: string | null;
   onSegmentClick: (segment: SegmentScore, route: ScoreRoute) => void;
   markers?: Marker[];
-  // Called when user clicks the map while no analysis is running
   onMapClick?: (lat: number, lng: number) => void;
   clickMode?: "origin" | "destination" | null;
+  // Initial map center — used to focus on the selected neighborhood
+  initialCenter?: { lat: number; lng: number };
+  initialZoom?: number;
 }
 
 const ROUTE_LAYER_PREFIX = "route-layer-";
@@ -38,6 +40,8 @@ export default function RoadScoreMap({
   markers = [],
   onMapClick,
   clickMode,
+  initialCenter,
+  initialZoom = 14,
 }: RoadScoreMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -48,11 +52,15 @@ export default function RoadScoreMap({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
+    const center: [number, number] = initialCenter
+      ? [initialCenter.lng, initialCenter.lat]
+      : [28.9784, 41.0082]; // Istanbul default
+
     const map = new mapboxgl.Map({
       container: containerRef.current,
       style: "mapbox://styles/mapbox/dark-v11",
-      center: [28.9784, 41.0082], // Istanbul default
-      zoom: 11,
+      center,
+      zoom: initialCenter ? initialZoom : 11,
     });
 
     map.addControl(new mapboxgl.NavigationControl(), "top-right");
