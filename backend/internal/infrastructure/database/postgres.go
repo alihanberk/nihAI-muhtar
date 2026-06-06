@@ -25,7 +25,7 @@ type Config struct {
 func NewPostgresConnection(cfg Config) (*sqlx.DB, error) {
 	var dsn string
 	if cfg.URL != "" {
-		dsn = cfg.URL
+		dsn = NormalizeDatabaseURL(cfg.URL)
 	} else {
 		dsn = fmt.Sprintf(
 			"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",

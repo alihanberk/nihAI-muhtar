@@ -3,11 +3,20 @@ set -e
 
 prepare_migrate_url() {
   url="$1"
+  region="${RENDER_DB_REGION:-frankfurt}"
 
-  # golang-migrate expects postgres:// scheme
   case "$url" in
     postgresql://*) url="postgres://${url#postgresql://}" ;;
   esac
+
+  # Render internal hostname: dpg-xxx-a → full regional FQDN
+  if echo "$url" | grep -qE '@dpg-[a-z0-9]+-a(/|\?|$)'; then
+    if ! echo "$url" | grep -q '\.render\.com'; then
+      url=$(echo "$url" | sed -E "s/@(dpg-[a-z0-9]+-a)\//@\1.${region}-postgres.render.com:5432\//")
+      url=$(echo "$url" | sed -E "s/@(dpg-[a-z0-9]+-a)$/@\1.${region}-postgres.render.com:5432/")
+      url=$(echo "$url" | sed -E "s/@(dpg-[a-z0-9]+-a)\?/@\1.${region}-postgres.render.com:5432?/")
+    fi
+  fi
 
   case "$url" in
     *sslmode=*)
@@ -29,10 +38,11 @@ prepare_migrate_url() {
 
 if [ -n "$DATABASE_URL" ]; then
   MIGRATE_URL="$(prepare_migrate_url "$DATABASE_URL")"
+  echo "Using database host: $(echo "$MIGRATE_URL" | sed -E 's|.*@([^/:?]+).*|\1|')"
 
   echo "Waiting for PostgreSQL to become available..."
   attempt=0
-  max_attempts=36
+  max_attempts=18
 
   while [ "$attempt" -lt "$max_attempts" ]; do
     attempt=$((attempt + 1))

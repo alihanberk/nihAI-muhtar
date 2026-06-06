@@ -21,6 +21,8 @@ services:
         fromDatabase:
           name: nihai-muhtar-db
           property: connectionString
+      - key: RENDER_DB_REGION
+        value: frankfurt
       - key: DB_SSLMODE
         value: require
       - key: JWT_SECRET
