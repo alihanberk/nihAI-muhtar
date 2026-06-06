@@ -76,6 +76,10 @@ npm run dev
 
 > Deploy adımları: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/alihanberk/nihAI-muhtar)
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/import?repository-url=https://github.com/alihanberk/nihAI-muhtar&root-directory=frontend&project-name=nihai-muhtar)
+
 ## 📁 Proje Yapısı
 
 ```
