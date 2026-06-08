@@ -107,10 +107,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_facade_jobs_updated_at ON facade_analysis_jobs;
 CREATE TRIGGER trg_facade_jobs_updated_at
     BEFORE UPDATE ON facade_analysis_jobs
     FOR EACH ROW EXECUTE FUNCTION update_facade_updated_at();
 
+DROP TRIGGER IF EXISTS trg_facade_buildings_updated_at ON facade_buildings;
 CREATE TRIGGER trg_facade_buildings_updated_at
     BEFORE UPDATE ON facade_buildings
     FOR EACH ROW EXECUTE FUNCTION update_facade_updated_at();

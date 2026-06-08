@@ -75,6 +75,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_route_analyses_updated_at ON route_analyses;
 CREATE TRIGGER trg_route_analyses_updated_at
     BEFORE UPDATE ON route_analyses
     FOR EACH ROW EXECUTE FUNCTION update_route_analyses_updated_at();
